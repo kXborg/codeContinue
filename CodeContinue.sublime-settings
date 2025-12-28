@@ -1,0 +1,7 @@
+{
+    "endpoint": "http://localhost:1234/v1/chat/completions",
+    "model": "starcoder-1b",
+    "max_context_lines": 30,
+    "timeout_ms": 10000,
+    "trigger_language": ["python", "cpp", "javascript"]
+}
