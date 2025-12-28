@@ -5,9 +5,6 @@
     },
     {
         "keys": ["tab"],
-        "command": "code_continue_accept",
-        "context": [
-            { "key": "code_continue_visible", "operator": "equal", "operand": true }
-        ]
+        "command": "code_continue_accept"
     }
 ]

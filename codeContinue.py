@@ -47,7 +47,7 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         settings = sublime.load_settings("CodeContinue.sublime-settings")
         endpoint = settings.get("endpoint", "")
         model = settings.get("model", "")
-        max_lines = settings.get("max_context_lines", 80)
+        max_lines = settings.get("max_context_lines", 40)
         timeout_ms = settings.get("timeout_ms", 150) / 1000.0  # Convert to seconds
 
         if not endpoint or not model:
@@ -71,14 +71,17 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         cursor_offset = cursor - start_line
         code_before = code[:cursor_offset]
         code_after = code[cursor_offset:]
-        prompt = "Continue the following code:\n{0}<cursor>{1}".format(code_before, code_after)
+        prompt = "Continue the following code without any explanations or comments:\n{0}<cursor>{1}".format(code_before, code_after)
 
         # Async API call
         def fetch_completion():
             try:
                 data = {
                     "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
+                    "messages": [
+                        {"role": "system", "content": "You are a code completion assistant. Only output the code continuation, no explanations, comments, or extra text."},
+                        {"role": "user", "content": prompt}
+                    ],
                     "max_tokens": 10,  # Limit to 10 tokens for continuation
                     "stop": ["\n\n", "\n#", "\n//"],  # Stop early
                     "temperature": 0.1
@@ -116,9 +119,11 @@ def show_phantom(view, cursor, suggestion):
     phantom = sublime.Phantom(sublime.Region(cursor, cursor), '<span style="color: gray">{0}</span>'.format(suggestion), sublime.LAYOUT_INLINE)
     phantom_set.update([phantom])
     phantoms[view.id()] = (phantom_set, suggestion)
+    view.set_status('code_continue_visible', 'true')
 
 def clear_phantoms(view):
     global phantoms
     if view.id() in phantoms:
         phantoms[view.id()][0].update([])
         del phantoms[view.id()]
+    view.erase_status('code_continue_visible')
