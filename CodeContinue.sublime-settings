@@ -1,6 +1,6 @@
 {
-    "endpoint": "http://localhost:1234/v1/chat/completions",
-    "model": "starcoder-1b",
+    "endpoint": "https://deplorably-athonite-loreta.ngrok-free.dev/v1/chat/completions",
+    "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
     "max_context_lines": 30,
     "timeout_ms": 20000,
     "trigger_language": ["python", "cpp", "javascript"]
