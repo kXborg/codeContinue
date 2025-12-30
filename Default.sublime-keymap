@@ -4,7 +4,10 @@
         "command": "code_continue_suggest"
     },
     {
-        "keys": ["tab"],
-        "command": "code_continue_accept"
+        "keys": ["right"],
+        "command": "code_continue_accept",
+        "context": [
+            {"key": "code_continue_visible", "operator": "equal", "operand": "true"}
+        ]
     }
 ]

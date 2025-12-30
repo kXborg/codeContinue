@@ -263,6 +263,9 @@ class InstallerGUI:
         self.packages_dir = None
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         
+        # Load existing settings from file
+        self.default_settings = self.load_default_settings()
+        
         # Set better default fonts based on platform
         self.setup_fonts()
         
@@ -272,6 +275,48 @@ class InstallerGUI:
         
         self.create_widgets()
         self.detect_sublime()
+    
+    def load_default_settings(self):
+        """Load settings from CodeContinue.sublime-settings file."""
+        settings_path = os.path.join(self.script_dir, "CodeContinue.sublime-settings")
+        
+        default_settings = {
+            "endpoint": "https://your-api.com/v1/chat/completions",
+            "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+            "max_context_lines": 30,
+            "timeout_ms": 20000,
+            "trigger_language": "python,cpp,javascript",
+            "api_key": ""
+        }
+        
+        try:
+            if os.path.exists(settings_path):
+                with open(settings_path, 'r') as f:
+                    loaded = json.load(f)
+                    
+                    # Map loaded settings to form defaults
+                    if "endpoint" in loaded:
+                        default_settings["endpoint"] = loaded["endpoint"]
+                    if "model" in loaded:
+                        default_settings["model"] = loaded["model"]
+                    if "max_context_lines" in loaded:
+                        default_settings["max_context_lines"] = loaded["max_context_lines"]
+                    if "timeout_ms" in loaded:
+                        default_settings["timeout_ms"] = loaded["timeout_ms"]
+                    if "trigger_language" in loaded:
+                        # Convert list to comma-separated string
+                        langs = loaded["trigger_language"]
+                        if isinstance(langs, list):
+                            default_settings["trigger_language"] = ",".join(langs)
+                        else:
+                            default_settings["trigger_language"] = langs
+                    if "api_key" in loaded:
+                        default_settings["api_key"] = loaded["api_key"]
+        except Exception as e:
+            # If reading fails, just use built-in defaults
+            pass
+        
+        return default_settings
     
     def configure_linux_fonts(self):
         """Improve font rendering on Linux by configuring default fonts."""
@@ -354,32 +399,32 @@ class InstallerGUI:
         
         # Endpoint
         ttk.Label(config_frame, text="API Endpoint URL:", font=self.label_font).grid(row=0, column=0, sticky=tk.W, pady=4, padx=(0, 8))
-        self.endpoint_var = tk.StringVar(value="https://your-api.com/v1/chat/completions")
+        self.endpoint_var = tk.StringVar(value=self.default_settings["endpoint"])
         ttk.Entry(config_frame, textvariable=self.endpoint_var, width=58, font=self.label_font).grid(row=0, column=1, pady=4)
         
         # Model
         ttk.Label(config_frame, text="Model Name:", font=self.label_font).grid(row=1, column=0, sticky=tk.W, pady=4, padx=(0, 8))
-        self.model_var = tk.StringVar(value="Qwen/Qwen2.5-Coder-1.5B-Instruct")
+        self.model_var = tk.StringVar(value=self.default_settings["model"])
         ttk.Entry(config_frame, textvariable=self.model_var, width=58, font=self.label_font).grid(row=1, column=1, pady=4)
         
         # API Key
         ttk.Label(config_frame, text="API Key (optional):", font=self.label_font).grid(row=2, column=0, sticky=tk.W, pady=4, padx=(0, 8))
-        self.api_key_var = tk.StringVar()
+        self.api_key_var = tk.StringVar(value=self.default_settings.get("api_key", ""))
         ttk.Entry(config_frame, textvariable=self.api_key_var, width=58, font=self.label_font, show="*").grid(row=2, column=1, pady=4)
         
         # Max context
         ttk.Label(config_frame, text="Max Context Lines:", font=self.label_font).grid(row=3, column=0, sticky=tk.W, pady=4, padx=(0, 8))
-        self.max_context_var = tk.StringVar(value="30")
+        self.max_context_var = tk.StringVar(value=str(self.default_settings["max_context_lines"]))
         ttk.Entry(config_frame, textvariable=self.max_context_var, width=20, font=self.label_font).grid(row=3, column=1, sticky=tk.W, pady=4)
         
         # Timeout
         ttk.Label(config_frame, text="Timeout (ms):", font=self.label_font).grid(row=4, column=0, sticky=tk.W, pady=4, padx=(0, 8))
-        self.timeout_var = tk.StringVar(value="20000")
+        self.timeout_var = tk.StringVar(value=str(self.default_settings["timeout_ms"]))
         ttk.Entry(config_frame, textvariable=self.timeout_var, width=20, font=self.label_font).grid(row=4, column=1, sticky=tk.W, pady=4)
         
         # Languages
         ttk.Label(config_frame, text="Trigger Languages:", font=self.label_font).grid(row=5, column=0, sticky=tk.W, pady=4, padx=(0, 8))
-        self.languages_var = tk.StringVar(value="python,cpp,javascript")
+        self.languages_var = tk.StringVar(value=self.default_settings["trigger_language"])
         ttk.Entry(config_frame, textvariable=self.languages_var, width=58, font=self.label_font).grid(row=5, column=1, pady=4)
         ttk.Label(config_frame, text="(comma-separated)", font=self.small_font).grid(row=6, column=1, sticky=tk.W)
         
@@ -518,6 +563,8 @@ class InstallerGUI:
 
 
 def main():
+    # Trying to improve text rendering on Ubuntu with
+    # the following scales, but didn't work.
     os.environ['GDK_SCALE'] = '1'
     os.environ['GDK_DPI_SCALE'] = '1'
     root = tk.Tk()

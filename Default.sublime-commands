@@ -1,0 +1,12 @@
+[
+    {
+        "caption": "CodeContinue: Configure",
+        "command": "code_continue_configure",
+        "description": "Configure API endpoint, model, and API key for CodeContinue"
+    },
+    {
+        "caption": "CodeContinue: Suggest",
+        "command": "code_continue_suggest",
+        "description": "Get a code suggestion from CodeContinue"
+    }
+]

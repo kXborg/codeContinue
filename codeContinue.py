@@ -42,6 +42,51 @@ def clean_markdown_fences(text):
     return text
 
 
+def is_endpoint_configured(settings):
+    """Check if endpoint is properly configured (not placeholder)."""
+    endpoint = settings.get("endpoint", "").strip()
+    if not endpoint or "your-api" in endpoint.lower():
+        return False
+    return True
+
+
+def show_endpoint_config_panel(view):
+    """Show input panel to configure endpoint on first run."""
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    current_endpoint = settings.get("endpoint", "https://your-api.com/v1/chat/completions")
+    
+    def on_endpoint_done(endpoint_text):
+        if endpoint_text.strip():
+            settings.set("endpoint", endpoint_text.strip())
+            
+            # Now ask for model
+            current_model = settings.get("model", "gpt-3.5-turbo")
+            def on_model_done(model_text):
+                if model_text.strip():
+                    settings.set("model", model_text.strip())
+                    sublime.save_settings("CodeContinue.sublime-settings")
+                    sublime.status_message("CodeContinue: Configuration saved! Ready to use.")
+                    _log("Configuration saved: endpoint and model set")
+            
+            view.window().show_input_panel(
+                "CodeContinue - Model name:",
+                current_model,
+                on_model_done,
+                None,
+                None
+            )
+        else:
+            sublime.status_message("CodeContinue: Endpoint not configured. Run 'CodeContinue: Configure' to set it up.")
+    
+    view.window().show_input_panel(
+        "CodeContinue - API Endpoint URL:",
+        current_endpoint,
+        on_endpoint_done,
+        None,
+        None
+    )
+
+
 # Global dict to store phantoms per view
 # Each entry: view.id() -> (phantom_set, [normalized_lines])
 phantoms = {}
@@ -124,6 +169,12 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         max_lines = settings.get("max_context_lines", 40)
         timeout_ms = settings.get("timeout_ms", 150) / 1000.0  # Convert to seconds
 
+        # Check if endpoint is configured
+        if not is_endpoint_configured(settings):
+            sublime.status_message("CodeContinue: Endpoint not configured. Opening configuration...")
+            sublime.set_timeout(lambda: show_endpoint_config_panel(view), 100)
+            return
+        
         if not endpoint or not model:
             sublime.status_message("CodeContinue: Endpoint or model not configured.")
             return
@@ -384,3 +435,55 @@ def on_model_entered(model):
     
     _log("CodeContinue: Configuration saved. Endpoint: {0}, Model: {1}".format(_setup_endpoint, model))
     sublime.message_dialog("CodeContinue configured successfully!\n\nEndpoint: {0}\nModel: {1}\n\nPress Ctrl+Enter to get a code suggestion.".format(_setup_endpoint, model))
+
+
+class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
+    """Command to configure CodeContinue settings via Command Palette"""
+    def run(self, edit):
+        view = self.view
+        settings = sublime.load_settings("CodeContinue.sublime-settings")
+        
+        # Endpoint panel
+        current_endpoint = settings.get("endpoint", "https://your-api.com/v1/chat/completions")
+        
+        def on_endpoint_done(endpoint_text):
+            if endpoint_text.strip():
+                settings.set("endpoint", endpoint_text.strip())
+                
+                # Model panel
+                current_model = settings.get("model", "gpt-3.5-turbo")
+                def on_model_done(model_text):
+                    if model_text.strip():
+                        settings.set("model", model_text.strip())
+                        
+                        # API Key panel (optional)
+                        current_api_key = settings.get("api_key", "")
+                        def on_api_key_done(api_key_text):
+                            settings.set("api_key", api_key_text.strip() if api_key_text.strip() else "")
+                            sublime.save_settings("CodeContinue.sublime-settings")
+                            sublime.status_message("CodeContinue: Configuration saved!")
+                            _log("Configuration updated via Command Palette")
+                        
+                        view.window().show_input_panel(
+                            "CodeContinue - API Key (optional, leave blank to skip):",
+                            current_api_key,
+                            on_api_key_done,
+                            None,
+                            None
+                        )
+                
+                view.window().show_input_panel(
+                    "CodeContinue - Model name:",
+                    current_model,
+                    on_model_done,
+                    None,
+                    None
+                )
+        
+        view.window().show_input_panel(
+            "CodeContinue - API Endpoint URL:",
+            current_endpoint,
+            on_endpoint_done,
+            None,
+            None
+        )
