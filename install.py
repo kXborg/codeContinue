@@ -14,6 +14,79 @@ import subprocess
 from pathlib import Path
 
 
+def configure_settings():
+    """Interactive configuration for endpoint and credentials."""
+    print("=" * 60)
+    print("Configuration Setup")
+    print("=" * 60)
+    print()
+    print("Please provide your API configuration:")
+    print()
+    
+    # Get endpoint
+    endpoint = input("API Endpoint URL (e.g., https://your-api.com/v1/chat/completions): ").strip()
+    if not endpoint:
+        print("⚠ Warning: No endpoint provided. Using default placeholder.")
+        endpoint = "https://your-api-endpoint.com/v1/chat/completions"
+    
+    # Get model
+    model = input("Model name (e.g., Qwen/Qwen2.5-Coder-1.5B-Instruct): ").strip()
+    if not model:
+        print("⚠ Warning: No model provided. Using default placeholder.")
+        model = "default-model"
+    
+    # Optional: API key
+    print()
+    api_key = input("API Key (optional, press Enter to skip): ").strip()
+    
+    # Max context lines
+    print()
+    max_context = input("Max context lines [default: 30]: ").strip()
+    if not max_context:
+        max_context = 30
+    else:
+        try:
+            max_context = int(max_context)
+        except ValueError:
+            print("⚠ Invalid number, using default: 30")
+            max_context = 30
+    
+    # Timeout
+    timeout = input("Request timeout in ms [default: 20000]: ").strip()
+    if not timeout:
+        timeout = 20000
+    else:
+        try:
+            timeout = int(timeout)
+        except ValueError:
+            print("⚠ Invalid number, using default: 20000")
+            timeout = 20000
+    
+    # Languages
+    print()
+    print("Trigger languages (comma-separated, e.g., python,javascript,cpp)")
+    languages_input = input("[default: python,cpp,javascript]: ").strip()
+    if languages_input:
+        languages = [lang.strip() for lang in languages_input.split(",")]
+    else:
+        languages = ["python", "cpp", "javascript"]
+    
+    config = {
+        "endpoint": endpoint,
+        "model": model,
+        "max_context_lines": max_context,
+        "timeout_ms": timeout,
+        "trigger_language": languages
+    }
+    
+    if api_key:
+        config["api_key"] = api_key
+    
+    print()
+    print("✓ Configuration saved")
+    return config
+
+
 def get_os_type():
     """Detect operating system."""
     system = platform.system()
@@ -166,7 +239,7 @@ def get_packages_directory():
         return None
 
 
-def install_package(sublime_path, packages_dir, script_dir):
+def install_package(sublime_path, packages_dir, script_dir, user_config=None):
     """Install the CodeContinue package."""
     
     package_name = "CodeContinue"
@@ -183,7 +256,6 @@ def install_package(sublime_path, packages_dir, script_dir):
     # Files to copy
     files_to_copy = [
         "codeContinue.py",
-        "CodeContinue.sublime-settings",
         "Default.sublime-keymap",
         "messages.json",
         "LICENSE",
@@ -209,6 +281,28 @@ def install_package(sublime_path, packages_dir, script_dir):
         except Exception as e:
             print(f"ERROR: Failed to copy {file_name}: {e}")
             return False
+    
+    # Handle settings file with user configuration
+    if user_config:
+        settings_dst = os.path.join(package_dest, "CodeContinue.sublime-settings")
+        try:
+            with open(settings_dst, 'w') as f:
+                json.dump(user_config, f, indent=4)
+            print(f"✓ Created settings with your configuration")
+        except Exception as e:
+            print(f"ERROR: Failed to write settings: {e}")
+            return False
+    else:
+        # Copy default settings file if no custom config
+        src = os.path.join(script_dir, "CodeContinue.sublime-settings")
+        dst = os.path.join(package_dest, "CodeContinue.sublime-settings")
+        if os.path.exists(src):
+            try:
+                shutil.copy2(src, dst)
+                print(f"✓ Copied: CodeContinue.sublime-settings")
+            except Exception as e:
+                print(f"ERROR: Failed to copy settings: {e}")
+                return False
     
     # Copy directories
     for dir_name in dirs_to_copy:
@@ -289,9 +383,22 @@ def main():
     print(f"✓ Packages directory: {packages_dir}")
     print()
     
-    # Step 3: Install package
-    print("Step 3: Installing CodeContinue package...")
-    if install_package(sublime_path, packages_dir, script_dir):
+    # Step 3: Configure settings
+    print("Step 3: Configuring CodeContinue settings...")
+    print()
+    
+    configure = input("Do you want to configure API settings now? (y/n) [default: y]: ").strip().lower()
+    if configure in ['', 'y', 'yes']:
+        user_config = configure_settings()
+    else:
+        print("⚠ Skipping configuration. You'll need to edit settings manually later.")
+        user_config = None
+    
+    print()
+    
+    # Step 4: Install package
+    print("Step 4: Installing CodeContinue package...")
+    if install_package(sublime_path, packages_dir, script_dir, user_config):
         print()
         print("=" * 60)
         print("✓ Installation completed successfully!")
