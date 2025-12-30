@@ -29,10 +29,10 @@ python install_gui.py
 Graphical installer with Tkinter. Pre-loads existing settings, configurable interface.
 
 **Both installers:**
-- ✓ Auto-detect Sublime Text 4 installation
-- ✓ Install to correct Packages directory
-- ✓ Pre-configure API endpoint, model, and settings
-- ✓ Cross-platform (Windows, macOS, Linux)
+-  Auto-detect Sublime Text 4 installation
+-  Install to correct Packages directory
+-  Pre-configure API endpoint, model, and settings
+-  Cross-platform (Windows, macOS, Linux)
 
 ### Option 2: Package Control (Coming Soon)
 
