@@ -74,6 +74,7 @@ When you launch Sublime Text after installing codeContinue, a setup wizard appea
    - Example: `https://api.openai.com/v1/chat/completions` for OpenAI
    - Or: `http://localhost:8000/v1/chat/completions` for local servers
    - Or any OpenAI-compatible endpoint
+   - **Note:** You must configure this - no default endpoint is provided
 
 2. **Enter your model name**
    - Examples: `gpt-3.5-turbo`, `gpt-4` (OpenAI)

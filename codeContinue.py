@@ -15,11 +15,12 @@ def _log(msg):
 
 def clean_markdown_fences(text):
     """
-    Remove markdown code fence markers from LLM output.
+    Remove markdown code fence markers and special tokens from LLM output.
     Handles patterns like:
     - ```python\ncode\n```
     - ```\ncode\n```
     - code```  (trailing fence)
+    - [END_OF_TEXT] token
     
     Called once per API response for efficiency.
     """
@@ -35,6 +36,11 @@ def clean_markdown_fences(text):
     # Match at end of string (with optional whitespace)
     closing_pattern = r'\n?\s*```\s*$'
     text = re.sub(closing_pattern, '', text)
+    
+    # Remove special tokens like [END_OF_TEXT], [INST], etc.
+    text = re.sub(r'\[END_OF_TEXT\]', '', text)
+    text = re.sub(r'\[INST\]', '', text)
+    text = re.sub(r'\[/INST\]', '', text)
     
     # Strip any remaining leading/trailing whitespace
     text = text.strip()
