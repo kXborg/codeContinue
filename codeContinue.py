@@ -206,7 +206,7 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         cursor_offset = cursor - start_point
         code_before = code[:cursor_offset]
         code_after = code[cursor_offset:]
-        prompt = "Continue the following code. Output ONLY the code continuation, no markdown, no backticks, no <CURSOR_HERE>, no comments, no explanations:\n{0}<CURSOR_HERE>{1}".format(code_before, code_after)
+        prompt = "Continue the following code. Output ONLY the code continuation, no markdown, no backticks, no <CURSOR_HERE>, no inline comments, no explanations:\n{0}<CURSOR_HERE>{1}".format(code_before, code_after)
 
         # Generate unique request ID for this view/cursor
         vid = view.id()
@@ -225,7 +225,7 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 data = {
                     "model": model,
                     "messages": [
-                        {"role": "system", "content": "You are a code completion expert. Output ONLY the code continuation without any markdown formatting, backticks, explanations, or comments. Do NOT include the <CURSOR_HERE> marker in your response."},
+                        {"role": "system", "content": "You are a code completion expert. Output ONLY the code continuation without any markdown formatting, backticks, explanations, comments, or inline comments. Write clean code without any commentary. Do NOT include the <CURSOR_HERE> marker in your response."},
                         {"role": "user", "content": prompt}
                     ],
                     "max_tokens": 128,  # Increased from 10 to 128 tokens for better continuations
@@ -283,28 +283,21 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
         try:
             insert_pos = sel[0].begin()
 
-            # Compute indentation of the current line where insertion happens
-            line_region = view.line(insert_pos)
-            line_text = view.substr(line_region)
-            import re
-            m = re.match(r"^[ \t]*", line_text)
-            current_indent = m.group(0) if m else ""
-
             # Prepare line to insert (first line)
             first_line = remaining.pop(0)
 
             # Remaining lines are already normalized (common indent stripped) by show_phantom
             rem_lines = remaining
 
-            # Insert first line at the cursor (indent already exists in buffer)
+            # Insert first line at the cursor
             text_to_insert = first_line
-            # If there are more lines, append a newline and apply indentation for the next line
+            # If there are more lines, append a newline (without forcing indentation)
             if rem_lines:
-                text_to_insert += "\n" + current_indent
+                text_to_insert += "\n"
 
             view.insert(edit, insert_pos, text_to_insert)
 
-            # Move cursor to end of inserted text (now at start of next line with indent when rem_lines exist)
+            # Move cursor to end of inserted text
             new_cursor = insert_pos + len(text_to_insert)
             view.sel().clear()
             view.sel().add(sublime.Region(new_cursor, new_cursor))

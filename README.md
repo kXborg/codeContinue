@@ -4,11 +4,11 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 
 ## Features
 
-- 🚀 Fast inline code completion powered by your choice of LLM
-- ⌨️ Simple keyboard shortcuts: `Ctrl+Enter` to suggest, `Tab` to accept
-- 🎯 Context-aware suggestions based on surrounding code
-- 🔧 Configurable for multiple languages (Python, C++, JavaScript, etc.)
-- 🌐 Works with any OpenAI-compatible API endpoint
+- Fast inline code completion powered by your choice of LLM
+- Simple keyboard shortcuts: `Ctrl+Enter` to suggest, `Tab` to accept
+- Context-aware suggestions based on surrounding code
+- Configurable for multiple languages (Python, C++, JavaScript, etc.)
+- Works with any OpenAI-compatible API endpoint
 
 ## Installation
 
