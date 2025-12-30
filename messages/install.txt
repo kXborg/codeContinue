@@ -16,7 +16,7 @@ If you don't see the setup dialog, manually configure:
 QUICK START
 -----------
 1. Open a Python, C++, or JavaScript file
-2. Press Ctrl+Enter to get a code suggestion
+2. Press Ctrl+Enter to get a code suggestion ( it's best to start with a comment )
 3. Press Tab to accept the suggestion
 
 ENDPOINTS & MODELS
@@ -32,4 +32,4 @@ Local Server:
 For more details, see the README file.
 
 Need help? Check the documentation at:
-https://github.com/yourusername/codeContinue
+https://github.com/kXborg/codeContinue
