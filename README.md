@@ -5,10 +5,12 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 ## Features
 
 - Fast inline code completion powered by your choice of LLM
-- Simple keyboard shortcuts: `Ctrl+Enter` (or just `Enter`)to suggest, `Tab` to accept
+- Simple keyboard shortcuts: Just `Enter` to suggest, `Tab` to accept
 - Context-aware suggestions based on surrounding code
 - Configurable for multiple languages (Python, C++, JavaScript, etc.)
 - Works with any OpenAI-compatible API endpoint
+
+⚠️ Key-binding Disclaimer: We know we should not publish with keybindings, but `Tab` key rarely conflicts with other plugins. If it creates any issue, please change to other keys. Check below for guidelines.
 
 ## Installation
 
@@ -27,12 +29,6 @@ Interactive command-line installer. Detects Sublime Text automatically, walks yo
 python install_gui.py
 ```
 Graphical installer with Tkinter. Pre-loads existing settings, configurable interface.
-
-**Both installers:**
--  Auto-detect Sublime Text 4 installation
--  Install to correct Packages directory
--  Pre-configure API endpoint, model, and settings
--  Cross-platform (Windows, macOS, Linux)
 
 ### Option 2: Package Control (Coming Soon)
 
@@ -96,38 +92,7 @@ The setup wizard automatically appears when you first install the plugin. It wil
 - Model name
 - API key (optional)
 
-Settings are saved automatically.
-
-### Reconfigure Anytime
-
-You can change your settings at any time using the command palette:
-
-1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS, `Ctrl+Shift+P` on Linux)
-2. Type "CodeContinue: Configure"
-3. Follow the prompts to update:
-   - API endpoint
-   - Model name
-   - API key (optional)
-
-Changes are saved immediately.
-
-### Manual Configuration
-
-For advanced users, edit settings directly:
-
-1. Go to `Preferences > Package Settings > CodeContinue > Settings`
-2. Edit the JSON file:
-
-```json
-{
-    "endpoint": "https://api.openai.com/v1/chat/completions",
-    "model": "gpt-3.5-turbo",
-    "api_key": "sk-...",
-    "max_context_lines": 30,
-    "timeout_ms": 20000,
-    "trigger_language": ["python", "cpp", "javascript"]
-}
-```
+Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`.
 
 ### Configuration Options
 
@@ -171,48 +136,25 @@ For endpoints requiring authentication (like OpenAI):
    }
    ```
 
-## Usage
+### Default Keybinding
 
-### Getting Suggestions
+⚠️ Key-binding Disclaimer: We know we should not publish with keybindings, but `Tab` key rarely conflicts with other plugins. If it creates any issue, please change to other keys.
 
-1. **Trigger a suggestion:**
-   - Start with a 1-2 line of code or a concise comment on what is the script about
-   - Press `Ctrl+Enter` or `Enter` while editing code (Windows/Linux)
-   - Or press `Cmd+Enter` on macOS
-   - The plugin analyzes surrounding code and fetches a suggestion
-   - The suggestion appears in gray text inline
+- **Tab** - Accept suggestion
 
-3. **Auto-suggest on new line:**
-   - The plugin also triggers automatically when you press `Enter` at the end of a line
-   - This provides a smooth, natural workflow
+**Customizing the keybinding:**
+If `Tab` conflicts with your workflow, you can change it:
 
-### Accepting Suggestions
-
-1. **Accept the suggestion:**
-   - Press `Tab` to accept the suggestion
-   - The code is inserted at your cursor position
-
-2. **Accept multi-line suggestions:**
-   - If a suggestion has multiple lines, press `Tab` multiple times
-   - Each press accepts the next line
-
-3. **Dismiss a suggestion:**
-   - Just keep typing or move your cursor
-   - The suggestion will automatically disappear
-   - Pressing `Escape` also dismisses it
-
-## Keybindings
-
-Default keybindings (customizable in `Default.sublime-keymap`):
-
-- `Ctrl+Enter` or `Enter` - Trigger code suggestion
-- `Tab` - Accept suggestion (only when phantom is visible)
-- `Escape` - Dismiss suggestion
-
-### Command Palette Commands
-
-- `CodeContinue: Suggest` - Manually trigger a suggestion
-- `CodeContinue: Configure` - Open configuration wizard
+1. Go to `Preferences > Package Settings > CodeContinue > Key Bindings`
+2. Modify the keybinding:
+   ```json
+   [
+       {
+           "keys": ["right"],  // or "ctrl+right", "end", etc.
+           "command": "code_continue_accept"
+       }
+   ]
+   ```
 
 ## Requirements
 
@@ -247,10 +189,11 @@ Default keybindings (customizable in `Default.sublime-keymap`):
 - Check if the endpoint is currently running/available
 - Use `Ctrl+Shift+P` → "CodeContinue: Configure" to update credentials
 
-### "Right Arrow" keybinding not working
-- Check that phantom is visible (gray text suggestion showing)
-- The keybinding only works when a suggestion is displayed
-- You can still use `Right Arrow` for normal cursor movement
+### Keybindings not working
+- Make sure you've set up keybindings (they're not enabled by default)
+- Go to `Preferences > Package Settings > CodeContinue > Key Bindings`
+- Check for conflicts with other packages
+- Try alternative key combinations
 
 ## Advanced Configuration
 
@@ -282,76 +225,6 @@ api_key: hf_...
 **Other providers:**
 Any endpoint supporting OpenAI's v1 chat completion format will work.
 
-### Customizing Keybindings
-
-Edit `Preferences > Package Settings > CodeContinue > Key Bindings` to customize:
-
-```json
-[
-    {
-        "keys": ["ctrl+shift+l"],
-        "command": "code_continue_suggest"
-    },
-    {
-        "keys": ["shift+right"],
-        "command": "code_continue_accept",
-        "context": [
-            {"key": "code_continue_visible", "operator": "equal", "operand": "true"}
-        ]
-    }
-]
-```
-
-## Supported Models
-
-CodeContinue works with any OpenAI-compatible endpoint. Some popular options:
-
-**Free/Open Source:**
-- Qwen/Qwen2.5-Coder (HuggingFace)
-- Mistral AI (HuggingFace, Together AI)
-- CodeLLaMA (Meta, various providers)
-- DeepSeek Coder (HuggingFace)
-
-**Paid APIs:**
-- OpenAI (GPT-3.5, GPT-4)
-- Anthropic Claude (via compatible endpoints)
-- Together AI
-- Modal
-- Anyscale
-
-**Local/Self-Hosted:**
-- Ollama (local, free)
-- LLaMA.cpp (local, free)
-- vLLM (self-hosted)
-- Text Generation WebUI (local)
-
 ## License
 
 See [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Found a bug? Have a feature request? Open an issue on GitHub!
-
-## Development
-
-For the technical package structure and distribution information, see [PACKAGE_STRUCTURE.md](PACKAGE_STRUCTURE.md).
-
-### Testing Installation
-
-To test the plugin before submitting to Package Control:
-
-1. **Using Python installers:**
-   ```bash
-   python install.py           # CLI installer
-   python install_gui.py       # GUI installer
-   ```
-
-2. **Manual testing:**
-   - Copy files to your Packages directory
-   - Restart Sublime Text ( usually restart not needed)
-   - Test the setup wizard and suggestions
-
-3. **Cross-platform testing:**
-   - Both installers work on Windows, macOS, and Linux
-   - Test on each platform before release

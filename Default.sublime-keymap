@@ -1,10 +1,22 @@
+// CodeContinue - Default Keybindings
+// 
+// The plugin automatically triggers on Enter at the end of a line.
+// Only the accept keybinding is provided by default.
+//
+// To customize these keybindings:
+// Go to: Preferences > Package Settings > CodeContinue > Key Bindings
+//
+// If Tab conflicts with your workflow, you can change it to:
+// - "right" (Right Arrow key)
+// - "ctrl+right" (Ctrl + Right Arrow)
+// - "end" (End key)
+
 [
-    {
-        "keys": ["ctrl+enter"],
-        "command": "code_continue_suggest"
-    },
+    // Accept code suggestion
     {
         "keys": ["tab"],
         "command": "code_continue_accept"
     }
 ]
+
+

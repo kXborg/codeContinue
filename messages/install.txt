@@ -5,29 +5,44 @@ Welcome! CodeContinue is now installed and ready to use.
 
 SETUP
 -----
-On your next restart of Sublime Text, you'll be prompted to configure:
-1. Your API endpoint (v1 compatible)
+On your first use, you'll be prompted to configure:
+1. Your API endpoint (OpenAI-compatible v1/chat/completions)
 2. Your model name
+3. Your API key
 
-If you don't see the setup dialog, manually configure:
-1. Open: Preferences > Package Settings > CodeContinue > Settings
-2. Set your endpoint and model
+You can also configure anytime via Command Palette:
+  Ctrl+Shift+P → "CodeContinue: Configure"
+
+Or manually:
+  Preferences > Package Settings > CodeContinue > Settings
 
 QUICK START
 -----------
 1. Open a Python, C++, or JavaScript file
-2. Press Ctrl+Enter to get a code suggestion ( it's best to start with a comment )
-3. Press Tab to accept the suggestion
+2. Press Enter at the end of a line - suggestions auto-trigger!
+3. Press Tab to accept the suggestion (gray inline text)
+4. For multi-line suggestions, press Tab multiple times
+
+Alternative: Manual trigger via Ctrl+Shift+P → "CodeContinue: Suggest"
+
+DEFAULT KEYBINDING
+------------------
+• Tab - Accept suggestion
+
+If Tab conflicts with your workflow, customize it:
+  Preferences > Package Settings > CodeContinue > Key Bindings
+
+Example alternatives: Right arrow, Ctrl+Right, End, etc.
 
 ENDPOINTS & MODELS
 ------------------
 OpenAI:
   Endpoint: https://api.openai.com/v1/chat/completions
-  Model: gpt-3.5-turbo
+  Model: gpt-3.5-turbo or gpt-4
 
-Local Server:
+Local Server (e.g., Ollama, LM Studio):
   Endpoint: http://localhost:8000/v1/chat/completions
-  Model: Any compatible model
+  Model: Your local model name
 
 For more details, see the README file.
 
