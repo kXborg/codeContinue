@@ -27,7 +27,7 @@ We provide cross-platform installers for Windows, macOS, and Linux.
    - Press Enter to install
 3. Configure codeContinue
    - After installing codeContinue, a setup wizard appears automatically
-   - Enter API end point and model name. Check Configuration for details.
+   - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
 
 ### Option 2: Manual Install 
 If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method. 
