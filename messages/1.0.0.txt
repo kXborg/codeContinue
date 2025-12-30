@@ -11,7 +11,7 @@ New Features:
 - Customizable keybindings and settings
 
 Get Started:
-- Press Ctrl+Enter to trigger a suggestion
+- Press Ctrl+Enter to trigger a suggestion, or just Enter key
 - Press Tab to accept
 - See README for full documentation
 
@@ -19,4 +19,4 @@ Configuration:
 - Preferences > Package Settings > CodeContinue > Settings
 
 Questions or issues?
-https://github.com/yourusername/codeContinue/issues
+https://github.com/kXborg/codeContinue/issues
