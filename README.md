@@ -94,7 +94,7 @@ For endpoints requiring authentication (like OpenAI):
 
 ⚠️ Key-binding Disclaimer: We know we should not publish with keybindings, but `Tab` key rarely conflicts with other plugins. If it creates any issue, please change to other keys.
 
-- **Tab** - Accept suggestion
+- **Tab**: Accept suggestion
 
 **Customizing the keybinding:**
 If `Tab` conflicts with your workflow, you can change it:
@@ -119,8 +119,8 @@ If `Tab` conflicts with your workflow, you can change it:
 ## Troubleshooting
 
 ### Setup wizard not appearing
-- Restart Sublime Text: File → Exit, then reopen
-- Check Sublime Text console (View → Show Console) for errors
+- Restart Sublime Text: File -> Exit, then reopen
+- Check Sublime Text console (View -> Show Console) for errors
 - Manually run: `Preferences > Package Settings > CodeContinue > Settings`
 - Or use `Ctrl+Shift+P` → "CodeContinue: Configure"
 
@@ -128,7 +128,7 @@ If `Tab` conflicts with your workflow, you can change it:
 - Check that your language is in the `trigger_language` list
 - Verify your API endpoint is accessible and correct
 - Check console for errors: `View → Show Console`
-- Try `Ctrl+Shift+P` → "CodeContinue: Configure" to verify settings
+- Try `Ctrl+Shift+P` -> "CodeContinue: Configure" to verify settings
 - Make sure you have an active API key if required
 
 ### Timeout errors
@@ -141,7 +141,7 @@ If `Tab` conflicts with your workflow, you can change it:
 - Verify your API key is correct
 - Make sure endpoint URL is exactly right (copy-paste to avoid typos)
 - Check if the endpoint is currently running/available
-- Use `Ctrl+Shift+P` → "CodeContinue: Configure" to update credentials
+- Use `Ctrl+Shift+P` -> "CodeContinue: Configure" to update credentials
 
 ### Keybindings not working
 - Make sure you've set up keybindings (they're not enabled by default)
