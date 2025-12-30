@@ -5,7 +5,7 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 ## Features
 
 - Fast inline code completion powered by your choice of LLM
-- Simple keyboard shortcuts: `Ctrl+Enter` to suggest, `Tab` to accept
+- Simple keyboard shortcuts: `Ctrl+Enter` (or just `Enter`)to suggest, `Tab` to accept
 - Context-aware suggestions based on surrounding code
 - Configurable for multiple languages (Python, C++, JavaScript, etc.)
 - Works with any OpenAI-compatible API endpoint
@@ -176,23 +176,24 @@ For endpoints requiring authentication (like OpenAI):
 ### Getting Suggestions
 
 1. **Trigger a suggestion:**
-   - Press `Ctrl+Enter` while editing code (Windows/Linux)
+   - Start with a 1-2 line of code or a concise comment on what is the script about
+   - Press `Ctrl+Enter` or `Enter` while editing code (Windows/Linux)
    - Or press `Cmd+Enter` on macOS
    - The plugin analyzes surrounding code and fetches a suggestion
    - The suggestion appears in gray text inline
 
-2. **Auto-suggest on new line:**
+3. **Auto-suggest on new line:**
    - The plugin also triggers automatically when you press `Enter` at the end of a line
    - This provides a smooth, natural workflow
 
 ### Accepting Suggestions
 
 1. **Accept the suggestion:**
-   - Press `Right Arrow` to accept the suggestion
+   - Press `Tab` to accept the suggestion
    - The code is inserted at your cursor position
 
 2. **Accept multi-line suggestions:**
-   - If a suggestion has multiple lines, press `Right Arrow` multiple times
+   - If a suggestion has multiple lines, press `Tab` multiple times
    - Each press accepts the next line
 
 3. **Dismiss a suggestion:**
@@ -200,19 +201,12 @@ For endpoints requiring authentication (like OpenAI):
    - The suggestion will automatically disappear
    - Pressing `Escape` also dismisses it
 
-### Why Right Arrow instead of Tab?
-
-The `Right Arrow` key works better for code completion because:
-- ✓ Allows you to press `Tab` for indentation without accepting the suggestion
-- ✓ Cleaner workflow when mixing indentation and suggestions
-- ✓ Natural cursor movement semantics
-
 ## Keybindings
 
 Default keybindings (customizable in `Default.sublime-keymap`):
 
-- `Ctrl+Enter` - Trigger code suggestion
-- `Right Arrow` - Accept suggestion (only when phantom is visible)
+- `Ctrl+Enter` or `Enter` - Trigger code suggestion
+- `Tab` - Accept suggestion (only when phantom is visible)
 - `Escape` - Dismiss suggestion
 
 ### Command Palette Commands
@@ -355,7 +349,7 @@ To test the plugin before submitting to Package Control:
 
 2. **Manual testing:**
    - Copy files to your Packages directory
-   - Restart Sublime Text
+   - Restart Sublime Text ( usually restart not needed)
    - Test the setup wizard and suggestions
 
 3. **Cross-platform testing:**
