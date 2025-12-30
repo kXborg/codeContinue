@@ -284,11 +284,12 @@ class InstallerGUI:
             self.small_font = ("SF Pro Text", 8)
             self.mono_font = ("Menlo", 9)
         else:  # linux
-            self.title_font = ("Ubuntu", 16, "bold")
-            self.header_font = ("Ubuntu", 10)
-            self.label_font = ("Ubuntu", 9)
-            self.small_font = ("Ubuntu", 8)
-            self.mono_font = ("Ubuntu Mono", 9)
+            # Try common Linux fonts with better fallbacks
+            self.title_font = ("DejaVu Sans", 15, "bold")
+            self.header_font = ("DejaVu Sans", 10)
+            self.label_font = ("DejaVu Sans", 9)
+            self.small_font = ("DejaVu Sans", 8)
+            self.mono_font = ("DejaVu Sans Mono", 9)
     
     def create_widgets(self):
         # Title
