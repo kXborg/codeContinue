@@ -5,10 +5,41 @@ import json
 import urllib.request
 import urllib.error
 import time
+import re
+
 # Simple logger with timestamp to stdout
 def _log(msg):
     ts = time.strftime('%H:%M:%S')
     print("CodeContinue [{0}] {1}".format(ts, msg))
+
+
+def clean_markdown_fences(text):
+    """
+    Remove markdown code fence markers from LLM output.
+    Handles patterns like:
+    - ```python\ncode\n```
+    - ```\ncode\n```
+    - code```  (trailing fence)
+    
+    Called once per API response for efficiency.
+    """
+    if not text:
+        return text
+    
+    # Pattern for opening fence: ```language or just ```
+    # Match at start of string (with optional whitespace)
+    opening_pattern = r'^\s*```[\w]*\s*\n?'
+    text = re.sub(opening_pattern, '', text)
+    
+    # Pattern for closing fence: ```
+    # Match at end of string (with optional whitespace)
+    closing_pattern = r'\n?\s*```\s*$'
+    text = re.sub(closing_pattern, '', text)
+    
+    # Strip any remaining leading/trailing whitespace
+    text = text.strip()
+    
+    return text
 
 
 # Global dict to store phantoms per view
@@ -155,6 +186,9 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 with urllib.request.urlopen(req, timeout=timeout_ms) as response:
                     result = json.loads(response.read().decode())
                     completion = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    
+                    # Clean markdown code fences (once per response, before processing)
+                    completion = clean_markdown_fences(completion)
                     
                     # Verify request is still relevant after network call
                     if pending_requests.get(vid) == request_id and completion:
