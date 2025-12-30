@@ -1,0 +1,11 @@
+{
+    "version": "1.0.0",
+    "description": "AI-powered code completion for Sublime Text using OpenAI-compatible APIs. Get intelligent inline code suggestions with a single keystroke.",
+    "url": "https://github.com/yourusername/codeContinue",
+    "issues": "https://github.com/yourusername/codeContinue/issues",
+    "author": "Your Name",
+    "license": "MIT",
+    "homepage": "https://github.com/yourusername/codeContinue",
+    "installation_notes": "CodeContinue will prompt you to configure your API endpoint and model on first launch. You can reconfigure anytime via Preferences > Package Settings > CodeContinue.",
+    "dependencies": []
+}

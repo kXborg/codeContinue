@@ -284,3 +284,69 @@ def clear_phantoms(view):
         phantoms[view.id()][0].update([])
         del phantoms[view.id()]
     view.erase_status('code_continue_visible')
+
+
+# Global to store endpoint during setup dialog flow
+_setup_endpoint = None
+
+
+def plugin_loaded():
+    """Called when Sublime Text loads the plugin"""
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    
+    # Check if this is first run (settings are empty/not configured)
+    endpoint = settings.get("endpoint", "").strip()
+    model = settings.get("model", "").strip()
+    
+    if not endpoint or not model:
+        _log("CodeContinue: First run detected, showing setup dialog")
+        sublime.set_timeout(show_setup_dialog, 500)
+
+
+def show_setup_dialog():
+    """Show input panel for endpoint configuration"""
+    window = sublime.active_window()
+    if not window:
+        return
+    
+    window.show_input_panel(
+        "CodeContinue Setup: Enter your v1 API endpoint",
+        "https://api.openai.com/v1/chat/completions",
+        on_endpoint_entered,
+        None,
+        None
+    )
+
+
+def on_endpoint_entered(endpoint):
+    """Callback after endpoint is entered"""
+    global _setup_endpoint
+    _setup_endpoint = endpoint
+    window = sublime.active_window()
+    if not window:
+        return
+    
+    window.show_input_panel(
+        "CodeContinue Setup: Enter your model name",
+        "gpt-3.5-turbo",
+        on_model_entered,
+        None,
+        None
+    )
+
+
+def on_model_entered(model):
+    """Callback after model is entered, save both settings"""
+    global _setup_endpoint
+    
+    if not _setup_endpoint:
+        sublime.error_dialog("CodeContinue Setup Error: Endpoint not set")
+        return
+    
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    settings.set("endpoint", _setup_endpoint)
+    settings.set("model", model)
+    sublime.save_settings("CodeContinue.sublime-settings")
+    
+    _log("CodeContinue: Configuration saved. Endpoint: {0}, Model: {1}".format(_setup_endpoint, model))
+    sublime.message_dialog("CodeContinue configured successfully!\n\nEndpoint: {0}\nModel: {1}\n\nPress Ctrl+Enter to get a code suggestion.".format(_setup_endpoint, model))

@@ -1,0 +1,35 @@
+CodeContinue - AI Code Completion for Sublime Text
+=====================================================
+
+Welcome! CodeContinue is now installed and ready to use.
+
+SETUP
+-----
+On your next restart of Sublime Text, you'll be prompted to configure:
+1. Your API endpoint (v1 compatible)
+2. Your model name
+
+If you don't see the setup dialog, manually configure:
+1. Open: Preferences > Package Settings > CodeContinue > Settings
+2. Set your endpoint and model
+
+QUICK START
+-----------
+1. Open a Python, C++, or JavaScript file
+2. Press Ctrl+Enter to get a code suggestion
+3. Press Tab to accept the suggestion
+
+ENDPOINTS & MODELS
+------------------
+OpenAI:
+  Endpoint: https://api.openai.com/v1/chat/completions
+  Model: gpt-3.5-turbo
+
+Local Server:
+  Endpoint: http://localhost:8000/v1/chat/completions
+  Model: Any compatible model
+
+For more details, see the README file.
+
+Need help? Check the documentation at:
+https://github.com/yourusername/codeContinue

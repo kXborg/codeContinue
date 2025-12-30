@@ -1,0 +1,22 @@
+CodeContinue v1.0.0
+===================
+
+Initial Release!
+
+New Features:
+- AI-powered inline code completions
+- Support for OpenAI-compatible APIs
+- First-run setup wizard
+- Multi-language support (Python, C++, JavaScript, and more)
+- Customizable keybindings and settings
+
+Get Started:
+- Press Ctrl+Enter to trigger a suggestion
+- Press Tab to accept
+- See README for full documentation
+
+Configuration:
+- Preferences > Package Settings > CodeContinue > Settings
+
+Questions or issues?
+https://github.com/yourusername/codeContinue/issues
