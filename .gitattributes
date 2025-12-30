@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.bat eol=crlf
+*.ps1 eol=crlf
+*.sublime-* text eol=lf
+*.py text eol=lf
+*.md text eol=lf

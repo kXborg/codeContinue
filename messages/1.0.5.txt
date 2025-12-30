@@ -1,4 +1,4 @@
-CodeContinue v1.0.0
+CodeContinue v1.0.5
 ===================
 
 Initial Release!
