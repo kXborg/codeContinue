@@ -248,86 +248,125 @@ class InstallerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("CodeContinue Installer")
-        self.root.geometry("700x650")
+        self.root.geometry("750x680")
         self.root.resizable(False, False)
+        
+        # DPI awareness for better font rendering on Windows
+        try:
+            from ctypes import windll
+            windll.shcore.SetProcessDpiAwareness(1)
+        except:
+            pass
         
         self.os_type = get_os_type()
         self.sublime_path = None
         self.packages_dir = None
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         
+        # Set better default fonts based on platform
+        self.setup_fonts()
+        
         self.create_widgets()
         self.detect_sublime()
     
+    def setup_fonts(self):
+        """Configure better fonts for the platform."""
+        if self.os_type == "windows":
+            self.title_font = ("Segoe UI", 16, "bold")
+            self.header_font = ("Segoe UI", 10)
+            self.label_font = ("Segoe UI", 9)
+            self.small_font = ("Segoe UI", 8)
+            self.mono_font = ("Consolas", 9)
+        elif self.os_type == "macos":
+            self.title_font = ("SF Pro Display", 16, "bold")
+            self.header_font = ("SF Pro Text", 10)
+            self.label_font = ("SF Pro Text", 9)
+            self.small_font = ("SF Pro Text", 8)
+            self.mono_font = ("Menlo", 9)
+        else:  # linux
+            self.title_font = ("Ubuntu", 16, "bold")
+            self.header_font = ("Ubuntu", 10)
+            self.label_font = ("Ubuntu", 9)
+            self.small_font = ("Ubuntu", 8)
+            self.mono_font = ("Ubuntu Mono", 9)
+    
     def create_widgets(self):
         # Title
-        title_frame = ttk.Frame(self.root, padding="10")
+        title_frame = ttk.Frame(self.root, padding="15")
         title_frame.pack(fill=tk.X)
         
         title_label = ttk.Label(
             title_frame,
             text="CodeContinue Sublime Text 4 Installer",
-            font=("Arial", 16, "bold")
+            font=self.title_font
         )
-        title_label.pack()
+        title_label.pack(pady=(0, 5))
         
         os_label = ttk.Label(
             title_frame,
             text=f"Detected OS: {self.os_type.upper()}",
-            font=("Arial", 10)
+            font=self.header_font
         )
         os_label.pack()
         
         # Detection status
-        detect_frame = ttk.LabelFrame(self.root, text="Detection", padding="10")
-        detect_frame.pack(fill=tk.X, padx=10, pady=5)
+        detect_frame = ttk.LabelFrame(self.root, text="Detection", padding="12")
+        detect_frame.pack(fill=tk.X, padx=12, pady=8)
         
-        self.sublime_label = ttk.Label(detect_frame, text="Searching for Sublime Text 4...")
-        self.sublime_label.pack(anchor=tk.W)
+        self.sublime_label = ttk.Label(detect_frame, text="Searching for Sublime Text 4...", font=self.label_font)
+        self.sublime_label.pack(anchor=tk.W, pady=2)
         
-        self.packages_label = ttk.Label(detect_frame, text="")
-        self.packages_label.pack(anchor=tk.W)
+        self.packages_label = ttk.Label(detect_frame, text="", font=self.label_font)
+        self.packages_label.pack(anchor=tk.W, pady=2)
         
         # Configuration
-        config_frame = ttk.LabelFrame(self.root, text="API Configuration", padding="10")
-        config_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        config_frame = ttk.LabelFrame(self.root, text="API Configuration", padding="12")
+        config_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=8)
         
         # Endpoint
-        ttk.Label(config_frame, text="API Endpoint URL:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        ttk.Label(config_frame, text="API Endpoint URL:", font=self.label_font).grid(row=0, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.endpoint_var = tk.StringVar(value="https://your-api.com/v1/chat/completions")
-        ttk.Entry(config_frame, textvariable=self.endpoint_var, width=60).grid(row=0, column=1, pady=2)
+        ttk.Entry(config_frame, textvariable=self.endpoint_var, width=58, font=self.label_font).grid(row=0, column=1, pady=4)
         
         # Model
-        ttk.Label(config_frame, text="Model Name:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        ttk.Label(config_frame, text="Model Name:", font=self.label_font).grid(row=1, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.model_var = tk.StringVar(value="Qwen/Qwen2.5-Coder-1.5B-Instruct")
-        ttk.Entry(config_frame, textvariable=self.model_var, width=60).grid(row=1, column=1, pady=2)
+        ttk.Entry(config_frame, textvariable=self.model_var, width=58, font=self.label_font).grid(row=1, column=1, pady=4)
         
         # API Key
-        ttk.Label(config_frame, text="API Key (optional):").grid(row=2, column=0, sticky=tk.W, pady=2)
+        ttk.Label(config_frame, text="API Key (optional):", font=self.label_font).grid(row=2, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.api_key_var = tk.StringVar()
-        ttk.Entry(config_frame, textvariable=self.api_key_var, width=60, show="*").grid(row=2, column=1, pady=2)
+        ttk.Entry(config_frame, textvariable=self.api_key_var, width=58, font=self.label_font, show="*").grid(row=2, column=1, pady=4)
         
         # Max context
-        ttk.Label(config_frame, text="Max Context Lines:").grid(row=3, column=0, sticky=tk.W, pady=2)
+        ttk.Label(config_frame, text="Max Context Lines:", font=self.label_font).grid(row=3, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.max_context_var = tk.StringVar(value="30")
-        ttk.Entry(config_frame, textvariable=self.max_context_var, width=20).grid(row=3, column=1, sticky=tk.W, pady=2)
+        ttk.Entry(config_frame, textvariable=self.max_context_var, width=20, font=self.label_font).grid(row=3, column=1, sticky=tk.W, pady=4)
         
         # Timeout
-        ttk.Label(config_frame, text="Timeout (ms):").grid(row=4, column=0, sticky=tk.W, pady=2)
+        ttk.Label(config_frame, text="Timeout (ms):", font=self.label_font).grid(row=4, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.timeout_var = tk.StringVar(value="20000")
-        ttk.Entry(config_frame, textvariable=self.timeout_var, width=20).grid(row=4, column=1, sticky=tk.W, pady=2)
+        ttk.Entry(config_frame, textvariable=self.timeout_var, width=20, font=self.label_font).grid(row=4, column=1, sticky=tk.W, pady=4)
         
         # Languages
-        ttk.Label(config_frame, text="Trigger Languages:").grid(row=5, column=0, sticky=tk.W, pady=2)
+        ttk.Label(config_frame, text="Trigger Languages:", font=self.label_font).grid(row=5, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.languages_var = tk.StringVar(value="python,cpp,javascript")
-        ttk.Entry(config_frame, textvariable=self.languages_var, width=60).grid(row=5, column=1, pady=2)
-        ttk.Label(config_frame, text="(comma-separated)", font=("Arial", 8)).grid(row=6, column=1, sticky=tk.W)
+        ttk.Entry(config_frame, textvariable=self.languages_var, width=58, font=self.label_font).grid(row=5, column=1, pady=4)
+        ttk.Label(config_frame, text="(comma-separated)", font=self.small_font).grid(row=6, column=1, sticky=tk.W)
         
         # Log output
-        log_frame = ttk.LabelFrame(self.root, text="Installation Log", padding="10")
-        log_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        log_frame = ttk.LabelFrame(self.root, text="Installation Log", padding="12")
+        log_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=8)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, height=8, state=tk.DISABLED)
+        self.log_text = scrolledtext.ScrolledText(
+            log_frame, 
+            height=8, 
+            state=tk.DISABLED,
+            font=self.mono_font,
+            wrap=tk.WORD,
+            relief=tk.SUNKEN,
+            borderwidth=1
+        )
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # Buttons
