@@ -518,6 +518,8 @@ class InstallerGUI:
 
 
 def main():
+    os.environ['GDK_SCALE'] = '1'
+    os.environ['GDK_DPI_SCALE'] = '1'
     root = tk.Tk()
     app = InstallerGUI(root)
     root.mainloop()
