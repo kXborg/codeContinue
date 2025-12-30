@@ -266,8 +266,36 @@ class InstallerGUI:
         # Set better default fonts based on platform
         self.setup_fonts()
         
+        # Configure Tkinter default fonts for better rendering on Linux
+        if self.os_type == "linux":
+            self.configure_linux_fonts()
+        
         self.create_widgets()
         self.detect_sublime()
+    
+    def configure_linux_fonts(self):
+        """Improve font rendering on Linux by configuring default fonts."""
+        try:
+            import tkinter.font as tkfont
+            
+            # Configure default fonts with antialiasing hints
+            default_font = tkfont.nametofont("TkDefaultFont")
+            default_font.configure(family="DejaVu Sans", size=9)
+            
+            text_font = tkfont.nametofont("TkTextFont")
+            text_font.configure(family="DejaVu Sans", size=9)
+            
+            fixed_font = tkfont.nametofont("TkFixedFont")
+            fixed_font.configure(family="DejaVu Sans Mono", size=9)
+            
+            # Try to enable font smoothing via Xft if available
+            try:
+                self.root.tk.call('tk', 'scaling', 1.33)  # Adjust scaling for better rendering
+            except:
+                pass
+                
+        except Exception as e:
+            _log(f"Could not configure Linux fonts: {e}")
     
     def setup_fonts(self):
         """Configure better fonts for the platform."""
@@ -284,9 +312,9 @@ class InstallerGUI:
             self.small_font = ("SF Pro Text", 8)
             self.mono_font = ("Menlo", 9)
         else:  # linux
-            # Try common Linux fonts with better fallbacks
-            self.title_font = ("DejaVu Sans", 15, "bold")
-            self.header_font = ("DejaVu Sans", 10)
+            # Use DejaVu with specific sizes that render better
+            self.title_font = ("DejaVu Sans", 14, "bold")
+            self.header_font = ("DejaVu Sans", 9)
             self.label_font = ("DejaVu Sans", 9)
             self.small_font = ("DejaVu Sans", 8)
             self.mono_font = ("DejaVu Sans Mono", 9)
