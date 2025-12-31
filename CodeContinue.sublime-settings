@@ -2,6 +2,6 @@
     "endpoint": "",
     "model": "",
     "max_context_lines": 30,
-    "timeout_ms": 20000,
+    "timeout_ms": 30000,
     "trigger_language": ["python", "cpp", "javascript"]
 }

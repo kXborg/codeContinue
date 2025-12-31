@@ -223,6 +223,7 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         
         # Async API call
         def fetch_completion():
+            request_start_time = time.time()
             try:
                 # Check if this request is still relevant
                 if pending_requests.get(vid) != request_id:
@@ -238,11 +239,19 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                     "stop": ["\n\n", "\n#", "\n//", "<CURSOR_HERE>"],  # Stop at boundaries
                     "temperature": 0.0  # Deterministic output
                 }
-                _log("Sending request to endpoint {0}".format(endpoint))
+                _log("Sending request to endpoint {0} (timeout: {1:.1f}s)".format(endpoint, timeout_ms))
                 req = urllib.request.Request(endpoint, data=json.dumps(data).encode(), headers={"Content-Type": "application/json"})
+                response_start_time = time.time()
                 with urllib.request.urlopen(req, timeout=timeout_ms) as response:
+                    response_received_time = time.time()
                     result = json.loads(response.read().decode())
                     completion = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    parse_complete_time = time.time()
+                    
+                    response_time = response_received_time - response_start_time
+                    parse_time = parse_complete_time - response_received_time
+                    total_time = parse_complete_time - request_start_time
+                    _log("Response received: {0:.2f}s (network), {1:.3f}s (parse), total {2:.2f}s".format(response_time, parse_time, total_time))
                     
                     # Clean markdown code fences (once per response, before processing)
                     completion = clean_markdown_fences(completion)
@@ -254,12 +263,18 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                     elif pending_requests.get(vid) == request_id:
                         sublime.status_message("CodeContinue: Empty response")
             except urllib.error.URLError as e:
+                elapsed = time.time() - request_start_time
+                _log("Network error after {0:.2f}s: {1}".format(elapsed, str(e)[:100]))
                 if pending_requests.get(vid) == request_id:
                     sublime.status_message("CodeContinue: Network error - {0}".format(str(e)[:50]))
-            except (ValueError, KeyError, json.JSONDecodeError) as e:
+            except (ValueError, KeyError) as e:
+                elapsed = time.time() - request_start_time
+                _log("Parse error after {0:.2f}s: {1}".format(elapsed, str(e)[:100]))
                 if pending_requests.get(vid) == request_id:
                     sublime.status_message("CodeContinue: Parse error - {0}".format(str(e)[:50]))
             except Exception as e:
+                elapsed = time.time() - request_start_time
+                _log("Unexpected error after {0:.2f}s: {1}".format(elapsed, str(e)[:100]))
                 if pending_requests.get(vid) == request_id:
                     sublime.status_message("CodeContinue: Unexpected error - {0}".format(str(e)[:50]))
 
