@@ -31,6 +31,7 @@ We provide cross-platform installers for Windows, macOS, and Linux.
    - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
 
 ### Option 2: Manual Install 
+![Manual installation of codeContinue](codeContinue-manual-install.gif)
 If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method. 
 
 1. **Python CLI Installer**
