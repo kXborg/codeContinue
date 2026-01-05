@@ -8,7 +8,7 @@ SETUP
 On your first use, you'll be prompted to configure:
 1. Your API endpoint (OpenAI-compatible v1/chat/completions)
 2. Your model name
-3. Your API key
+3. Your API key (if any)
 
 You can also configure anytime via Command Palette:
   Ctrl+Shift+P → "CodeContinue: Configure"
