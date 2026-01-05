@@ -378,7 +378,7 @@ class InstallerGUI:
         
         os_label = ttk.Label(
             title_frame,
-            text=f"Detected OS: {self.os_type.upper()}",
+            text=f"✅Detected OS: {self.os_type.upper()}",
             font=self.header_font
         )
         os_label.pack()
@@ -401,16 +401,23 @@ class InstallerGUI:
         ttk.Label(config_frame, text="API Endpoint URL:", font=self.label_font).grid(row=0, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.endpoint_var = tk.StringVar(value=self.default_settings["endpoint"])
         ttk.Entry(config_frame, textvariable=self.endpoint_var, width=58, font=self.label_font).grid(row=0, column=1, pady=4)
+        # Example endpoint label
+        ttk.Label(
+            config_frame,
+            text='Example: "https://<provider>/v1/chat/completions"',
+            font=self.small_font,
+            foreground="#888"
+        ).grid(row=1, column=1, sticky=tk.W, padx=(0, 8))
         
         # Model
-        ttk.Label(config_frame, text="Model Name:", font=self.label_font).grid(row=1, column=0, sticky=tk.W, pady=4, padx=(0, 8))
+        ttk.Label(config_frame, text="Model Name:", font=self.label_font).grid(row=2, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.model_var = tk.StringVar(value=self.default_settings["model"])
-        ttk.Entry(config_frame, textvariable=self.model_var, width=58, font=self.label_font).grid(row=1, column=1, pady=4)
+        ttk.Entry(config_frame, textvariable=self.model_var, width=58, font=self.label_font).grid(row=2, column=1, pady=4)
         
         # API Key
-        ttk.Label(config_frame, text="API Key (optional):", font=self.label_font).grid(row=2, column=0, sticky=tk.W, pady=4, padx=(0, 8))
+        ttk.Label(config_frame, text="API Key (optional):", font=self.label_font).grid(row=3, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.api_key_var = tk.StringVar(value=self.default_settings.get("api_key", ""))
-        ttk.Entry(config_frame, textvariable=self.api_key_var, width=58, font=self.label_font, show="*").grid(row=2, column=1, pady=4)
+        ttk.Entry(config_frame, textvariable=self.api_key_var, width=58, font=self.label_font, show="*").grid(row=3, column=1, pady=4)
         
         # Max context
         ttk.Label(config_frame, text="Max Context Lines:", font=self.label_font).grid(row=3, column=0, sticky=tk.W, pady=4, padx=(0, 8))
