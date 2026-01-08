@@ -208,11 +208,11 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         context_region = sublime.Region(start_point, end_point)
         code = view.substr(context_region)
 
-        # Insert <CURSOR_HERE> marker at cursor position relative to context start
+        # Build prompt without special markers that might confuse the model
         cursor_offset = cursor - start_point
         code_before = code[:cursor_offset]
         code_after = code[cursor_offset:]
-        prompt = "Continue the following code. Output ONLY the code continuation, no markdown, no backticks, no <CURSOR_HERE>, no inline comments, no explanations:\n{0}<CURSOR_HERE>{1}".format(code_before, code_after)
+        prompt = "Continue the following code:\n{0}".format(code_before)
 
         # Generate unique request ID for this view/cursor
         vid = view.id()
@@ -235,9 +235,8 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                         {"role": "system", "content": "You are a code completion expert. Output ONLY the code continuation without any markdown formatting, backticks, explanations, comments, or inline comments. Write clean code without any commentary. Do NOT include the <CURSOR_HERE> marker in your response."},
                         {"role": "user", "content": prompt}
                     ],
-                    "max_tokens": 128,  # Increased from 10 to 128 tokens for better continuations
-                    "stop": ["\n\n", "\n#", "\n//", "<CURSOR_HERE>"],  # Stop at boundaries
-                    "temperature": 0.0  # Deterministic output
+                    "max_tokens": 1024,
+                    "temperature": 0.3
                 }
                 _log("Sending request to endpoint {0} (timeout: {1:.1f}s)".format(endpoint, timeout_ms))
                 req = urllib.request.Request(endpoint, data=json.dumps(data).encode(), headers={"Content-Type": "application/json"})
@@ -245,6 +244,7 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 with urllib.request.urlopen(req, timeout=timeout_ms) as response:
                     response_received_time = time.time()
                     result = json.loads(response.read().decode())
+                    _log("Received Response : {}".format(result))
                     completion = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
                     parse_complete_time = time.time()
                     

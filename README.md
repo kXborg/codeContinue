@@ -1,4 +1,5 @@
 # CodeContinue - AI Code Completion for Sublime Text
+![LLM Powered IntellyCode Plugin for Sublime Text](./codeContinue-in-action.gif)
 
 An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions using OpenAI-compatible APIs.
 
@@ -30,6 +31,7 @@ We provide cross-platform installers for Windows, macOS, and Linux.
    - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
 
 ### Option 2: Manual Install 
+![Manual installation of codeContinue](codeContinue-manual-install.gif)
 If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method. 
 
 1. **Python CLI Installer**
@@ -56,7 +58,9 @@ Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Foll
   - Other providers: Use their v1-compatible endpoint
 
 - **model**: The model to use for completions - **Required**
-  - Examples: `gpt-3.5-turbo`, `gpt-4`, `Qwen/Qwen2.5-Coder-1.5B-Instruct`, etc.
+  - Tested models so far are as follows: 
+    - `gpt-oss-20b`
+    - `Qwen/Qwen2.5-Coder-1.5B-Instruct`
 
 - **api_key**: Authentication key (optional)
   - Only needed if your endpoint requires it

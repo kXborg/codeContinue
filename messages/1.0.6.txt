@@ -1,0 +1,24 @@
+CodeContinue v1.0.6
+===================
+
+Initial Release!
+
+New Features:
+- AI-powered inline code completions
+- Support for OpenAI-compatible APIs
+    - Tested models : GPT-oss-20b and Qwen/Qwen2.5-Coder-1.5B-Instruct
+    - Serve via vLLM, Llama.cpp, and more
+- First-run setup wizard
+- Multi-language support (Python, C++, JavaScript, or add custom during installtion)
+- Customizable keybindings and settings
+
+Get Started:
+- Write a comment (what you are planning to do), then just Enter key
+- Press Tab to accept
+- See README for full documentation
+
+Configuration:
+- Preferences > Package Settings > CodeContinue > Settings
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

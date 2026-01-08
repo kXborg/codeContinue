@@ -20,7 +20,7 @@ codeContinue/
 
 ## How It Works with Package Control
 
-1. **Installation**: User installs via Package Control
+1. **Installation**: User installs via Package Control ( manually for now)
 2. **First Launch**: `plugin_loaded()` detects first run
 3. **Setup Wizard**: Shows input dialogs for endpoint & model
 4. **Configuration Saved**: Settings saved to `CodeContinue.sublime-settings`
@@ -40,7 +40,7 @@ codeContinue/
 - Customizable via Preferences > Package Settings > codeContinue
 
 ### Default.sublime-keymap
-- Default keybindings: Ctrl+Enter (suggest), Tab (accept)
+- Default keybindings: Tab (accept)
 - Users can override in their own keymap
 
 ### messages.json & messages/
