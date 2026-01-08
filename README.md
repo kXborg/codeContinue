@@ -10,7 +10,7 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 - Configurable for multiple languages (Python, C++, JavaScript, etc.)
 - Works with any OpenAI-compatible API endpoint
 
-⚠️ Key-binding Disclaimer: We are aware of potential issues due to defaultt keybindings. However, `Tab` key rarely conflicts with other plugins. If it creates any issue, please change to other keys. Check below for guidelines.
+⚠️ Key-binding Disclaimer: We are aware of potential issues due to default keybindings. However, `Tab` key rarely conflicts with other plugins. If it creates any issue, please change to other keys. Check below for guidelines.
 
 ## Installation
 
