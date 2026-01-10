@@ -1,7 +1,7 @@
 # CodeContinue - AI Code Completion for Sublime Text
 ![LLM Powered IntellyCode Plugin for Sublime Text](./codeContinue-in-action.gif)
 
-An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions using OpenAI-compatible APIs.
+An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions using OpenAI-compatible APIs. Check out [CodeContinue blog post here](https://www.orbital.net.in/blog/codecontinue-llm-powered-sublime-text-autocomplete).
 
 ## Features
 
