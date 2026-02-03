@@ -1,4 +1,4 @@
-# CodeContinue Installation Tools
+# CodeContinue Installation Tools for Experiments/Dev
 
 This directory contains standalone installers for CodeContinue. These scripts are **not loaded by Sublime Text** - they are meant to be run with your system Python.
 
