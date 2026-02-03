@@ -4,3 +4,13 @@
 *.sublime-* text eol=lf
 *.py text eol=lf
 *.md text eol=lf
+
+# Exclude large media files from package
+*.gif export-ignore
+*.mp4 export-ignore
+*.webm export-ignore
+*.svg export-ignore
+videos/ export-ignore
+
+# Exclude installer scripts (they use tkinter which isn't bundled with ST)
+tools/ export-ignore

@@ -1,22 +1,22 @@
-// CodeContinue - Default Keybindings
+// CodeContinue - Key Bindings
 // 
-// The plugin automatically triggers on Enter at the end of a line.
-// Only the accept keybinding is provided by default.
-//
-// To customize these keybindings:
+// No default keybindings are set to avoid conflicts with Sublime Text defaults.
+// 
+// To set up your preferred keybinding:
 // Go to: Preferences > Package Settings > CodeContinue > Key Bindings
+// 
+// Example configurations you can add to your User keymap:
 //
-// If Tab conflicts with your workflow, you can change it to:
-// - "right" (Right Arrow key)
-// - "ctrl+right" (Ctrl + Right Arrow)
-// - "end" (End key)
+// Option 1: Tab key (may conflict with autocomplete/indent)
+// { "keys": ["tab"], "command": "code_continue_accept" }
+//
+// Option 2: Right Arrow key
+// { "keys": ["right"], "command": "code_continue_accept" }
+//
+// Option 3: Ctrl+Enter
+// { "keys": ["ctrl+enter"], "command": "code_continue_accept" }
+//
+// Option 4: End key
+// { "keys": ["end"], "command": "code_continue_accept" }
 
-[
-    // Accept code suggestion
-    {
-        "keys": ["tab"],
-        "command": "code_continue_accept"
-    }
-]
-
-
+[]
