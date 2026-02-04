@@ -1,5 +1,5 @@
 # CodeContinue - AI Code Completion for Sublime Text
-![LLM Powered IntellyCode Plugin for Sublime Text](./codeContinue-in-action.gif)
+![LLM Powered IntellyCode Plugin for Sublime Text](videos/codeContinue-in-action.gif)
 
 An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions using OpenAI-compatible APIs. Check out [CodeContinue blog post here](https://www.orbital.net.in/blog/codecontinue-llm-powered-sublime-text-autocomplete).
 
@@ -29,7 +29,7 @@ We provide cross-platform installers for Windows, macOS, and Linux.
    - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
 
 ### Option 2: Manual Install (For Developers)
-![Manual installation of codeContinue](codeContinue-manual-install.gif)
+![Manual installation of codeContinue](videos/codeContinue-manual-install.gif)
 If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method. 
 
 1. **Python CLI Installer**
@@ -98,8 +98,9 @@ For endpoints requiring authentication (like OpenAI):
 - Internet connection (for API access)
 - Access to an OpenAI-compatible API endpoint
 
+## Troubleshooting
+
 <details>
-<summary><strong>Troubleshooting</strong></summary>
 
 ### Setup wizard not appearing
 - Restart Sublime Text: File -> Exit, then reopen
@@ -136,8 +137,7 @@ For endpoints requiring authentication (like OpenAI):
 
 ## Advanced Configuration
 
-### Custom API Endpoints
-
+<details>
 CodeContinue works with any OpenAI-compatible v1 API. Examples:
 
 **OpenAI:**
@@ -163,6 +163,7 @@ api_key: hf_...
 
 **Other providers:**
 Any endpoint supporting OpenAI's v1 chat completion format will work.
+</details>
 
 ## License
 
