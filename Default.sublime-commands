@@ -8,5 +8,21 @@
         "caption": "CodeContinue: Suggest",
         "command": "code_continue_suggest",
         "description": "Get a code suggestion from CodeContinue"
+    },
+    {
+        "caption": "Preferences: CodeContinue Settings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/codeContinue/CodeContinue.sublime-settings",
+            "default": "// CodeContinue Settings - User\n// See default settings for available options\n{\n\t$0\n}\n"
+        }
+    },
+    {
+        "caption": "Preferences: CodeContinue Key Bindings",
+        "command": "edit_settings",
+        "args": {
+            "base_file": "${packages}/codeContinue/Default.sublime-keymap",
+            "default": "// CodeContinue Key Bindings - User\n// Example: { \"keys\": [\"tab\"], \"command\": \"code_continue_accept\" }\n[\n\t$0\n]\n"
+        }
     }
 ]

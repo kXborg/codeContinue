@@ -1,0 +1,26 @@
+CodeContinue v1.1.0
+===================
+
+Improvements based on Package Control review feedback:
+
+New Features:
+• Package Settings menu now available:
+  Preferences > Package Settings > CodeContinue > Settings
+  Preferences > Package Settings > CodeContinue > Key Bindings
+
+• Command Palette access to settings:
+  "Preferences: CodeContinue Settings"
+  "Preferences: CodeContinue Key Bindings"
+
+• New "debug" setting (default: false)
+  Enable to see detailed logging in View > Show Console
+  Plugin is now silent by default
+
+• Settings file now includes documentation comments
+
+Bug Fixes:
+• Added missing "api_key" to default settings
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues
+

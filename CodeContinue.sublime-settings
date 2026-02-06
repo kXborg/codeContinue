@@ -1,7 +1,25 @@
 {
+    // API endpoint URL (OpenAI-compatible v1 format)
+    // Examples:
+    //   - OpenAI: "https://api.openai.com/v1/chat/completions"
+    //   - Local: "http://localhost:8000/v1/chat/completions"
     "endpoint": "",
+
+    // Model name to use for completions
     "model": "",
+
+    // API key for authentication (optional, only if endpoint requires it)
+    "api_key": "",
+
+    // Number of lines of context to send to the model
     "max_context_lines": 30,
+
+    // Request timeout in milliseconds
     "timeout_ms": 30000,
-    "trigger_language": ["python", "cpp", "javascript"]
+
+    // Languages to enable suggestions for
+    "trigger_language": ["python", "cpp", "javascript"],
+
+    // Enable debug logging to console (View > Show Console)
+    "debug": false
 }

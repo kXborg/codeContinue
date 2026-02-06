@@ -7,10 +7,12 @@ import urllib.error
 import time
 import re
 
-# Simple logger with timestamp to stdout
+# Simple logger with timestamp to stdout (only when debug is enabled)
 def _log(msg):
-    ts = time.strftime('%H:%M:%S')
-    print("CodeContinue [{0}] {1}".format(ts, msg))
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    if settings.get("debug", False):
+        ts = time.strftime('%H:%M:%S')
+        print("CodeContinue [{0}] {1}".format(ts, msg))
 
 
 def clean_markdown_fences(text):

@@ -1,0 +1,42 @@
+[
+    {
+        "caption": "Preferences",
+        "id": "preferences",
+        "mnemonic": "n",
+        "children": [
+            {
+                "caption": "Package Settings",
+                "id": "package-settings",
+                "mnemonic": "P",
+                "children": [
+                    {
+                        "caption": "CodeContinue",
+                        "children": [
+                            {
+                                "caption": "Settings",
+                                "command": "edit_settings",
+                                "args": {
+                                    "base_file": "${packages}/codeContinue/CodeContinue.sublime-settings",
+                                    "default": "// CodeContinue Settings - User\n// See default settings for available options\n{\n\t$0\n}\n"
+                                }
+                            },
+                            {
+                                "caption": "Key Bindings",
+                                "command": "edit_settings",
+                                "args": {
+                                    "base_file": "${packages}/codeContinue/Default.sublime-keymap",
+                                    "default": "// CodeContinue Key Bindings - User\n// Example: { \"keys\": [\"tab\"], \"command\": \"code_continue_accept\" }\n[\n\t$0\n]\n"
+                                }
+                            },
+                            { "caption": "-" },
+                            {
+                                "caption": "Configure Wizard...",
+                                "command": "code_continue_configure"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
