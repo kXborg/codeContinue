@@ -13,7 +13,7 @@
         "caption": "Preferences: CodeContinue Settings",
         "command": "edit_settings",
         "args": {
-            "base_file": "${packages}/codeContinue/CodeContinue.sublime-settings",
+            "base_file": "${packages}/CodeContinue/CodeContinue.sublime-settings",
             "default": "// CodeContinue Settings - User\n// See default settings for available options\n{\n\t$0\n}\n"
         }
     },
@@ -21,7 +21,7 @@
         "caption": "Preferences: CodeContinue Key Bindings",
         "command": "edit_settings",
         "args": {
-            "base_file": "${packages}/codeContinue/Default.sublime-keymap",
+            "base_file": "${packages}/CodeContinue/Default.sublime-keymap",
             "user_file": "${packages}/User/Default (${platform}).sublime-keymap",
             "default": "[\n\t$0\n]\n"
         }
