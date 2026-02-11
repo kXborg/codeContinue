@@ -30,7 +30,9 @@ We provide cross-platform installers for Windows, macOS, and Linux.
 
 ### Option 2: Manual Install (For Developers)
 ![Manual installation of codeContinue](videos/codeContinue-manual-install.gif)
-If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method. 
+If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method.
+
+<details>
 
 1. **Python CLI Installer**
 
@@ -45,6 +47,8 @@ Interactive command-line installer. Detects Sublime Text automatically, walks yo
 python install_gui.py
 ```
 Graphical installer with Tkinter. Pre-loads existing settings, configurable interface.
+
+</details>
 
 ## Configuration
 <details>

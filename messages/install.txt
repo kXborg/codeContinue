@@ -23,7 +23,6 @@ QUICK START
 3. Press Tab to accept the suggestion (gray inline text)
 4. For multi-line suggestions, press Tab multiple times
 
-Alternative: Manual trigger via Ctrl+Shift+P → "CodeContinue: Suggest"
 
 DEFAULT KEYBINDING
 ------------------

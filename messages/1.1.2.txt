@@ -1,4 +1,4 @@
-CodeContinue v1.1.1
+CodeContinue v1.1.2
 ===================
 
 Improvements based on Package Control review feedback:
