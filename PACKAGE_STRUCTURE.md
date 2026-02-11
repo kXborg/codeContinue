@@ -8,12 +8,13 @@ This document explains the structure of the codeContinue plugin for Sublime Text
 codeContinue/
 ├── codeContinue.py                    # Main plugin file
 ├── CodeContinue.sublime-settings      # Default settings template
+├── Default.sublime-commands           # Command palette entries
 ├── Default.sublime-keymap             # Default keybindings
-├── package-metadata.json              # Package Control metadata
-├── messages.json                       # Post-install messages
+├── Main.sublime-menu                  # Package Settings menu
+├── messages.json                      # Post-install messages
 ├── messages/
 │   ├── install.txt                    # Installation welcome message
-│   └── 1.0.0.txt                      # Release notes for v1.0.0
+│   └── 1.1.0.txt                      # Release notes for v1.1.0
 ├── README.md                          # User documentation
 └── LICENSE                            # License file
 ```
@@ -35,15 +36,23 @@ codeContinue/
 - Manages phantom rendering and acceptance
 
 ### CodeContinue.sublime-settings
-- Template with default values
-- Users' settings are saved here automatically on first run
-- Customizable via Preferences > Package Settings > codeContinue
+- Template with default values and documentation comments
+- Users' settings are saved automatically to the User package
+- Customizable via Preferences > Package Settings > CodeContinue
+
+### Default.sublime-commands
+- Command palette entries for Configure, Suggest, Settings, and Key Bindings
 
 ### Default.sublime-keymap
-- Default keybindings: Tab (accept)
-- Users can override in their own keymap
+- Default keybindings (empty by default to avoid conflicts)
+- Users can add bindings via Preferences > Package Settings > CodeContinue > Key Bindings
+
+### Main.sublime-menu
+- Adds CodeContinue to Preferences > Package Settings menu
+- Exposes Settings, Key Bindings, and Configure Wizard
 
 ### messages.json & messages/
 - Package Control feature for post-installation messaging
 - Shows welcome guide and release notes
 - Improves user onboarding
+

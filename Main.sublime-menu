@@ -25,7 +25,8 @@
                                 "command": "edit_settings",
                                 "args": {
                                     "base_file": "${packages}/codeContinue/Default.sublime-keymap",
-                                    "default": "// CodeContinue Key Bindings - User\n// Example: { \"keys\": [\"tab\"], \"command\": \"code_continue_accept\" }\n[\n\t$0\n]\n"
+                                    "user_file": "${packages}/User/Default (${platform}).sublime-keymap",
+                                    "default": "[\n\t$0\n]\n"
                                 }
                             },
                             { "caption": "-" },

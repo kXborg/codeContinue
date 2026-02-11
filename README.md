@@ -47,6 +47,8 @@ python install_gui.py
 Graphical installer with Tkinter. Pre-loads existing settings, configurable interface.
 
 ## Configuration
+<details>
+<summary>Click to expand configuration options</summary>
 
 Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Following are configuration options.
 
@@ -74,6 +76,11 @@ Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Foll
 - **trigger_language**: Array of language scopes to enable the plugin
   - Examples: `python`, `cpp`, `javascript`, `typescript`, `java`, `go`, `rust`, etc.
 
+- **debug**: Enable debug logging to console (default: `false`)
+  - Set to `true` to see detailed logs in `View → Show Console`
+  - Plugin is silent by default
+
+</details>
 ### API Authentication
 
 For endpoints requiring authentication (like OpenAI):
@@ -101,6 +108,7 @@ For endpoints requiring authentication (like OpenAI):
 ## Troubleshooting
 
 <details>
+<summary>Click to expand troubleshooting tips</summary>
 
 ### Setup wizard not appearing
 - Restart Sublime Text: File -> Exit, then reopen
@@ -111,7 +119,7 @@ For endpoints requiring authentication (like OpenAI):
 ### Suggestions not appearing
 - Check that your language is in the `trigger_language` list
 - Verify your API endpoint is accessible and correct
-- Check console for errors: `View → Show Console`
+- Enable debug logging: set `"debug": true` in settings, then check `View → Show Console`
 - Try `Ctrl+Shift+P` -> "CodeContinue: Configure" to verify settings
 - Make sure you have an active API key if required
 
@@ -138,6 +146,7 @@ For endpoints requiring authentication (like OpenAI):
 ## Advanced Configuration
 
 <details>
+<summary>Click to expand advanced configuration examples</summary>
 CodeContinue works with any OpenAI-compatible v1 API. Examples:
 
 **OpenAI:**
