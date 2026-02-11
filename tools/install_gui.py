@@ -180,7 +180,10 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
     
     files_to_copy = [
         "codeContinue.py",
+        "CodeContinue.sublime-settings",
+        "Default.sublime-commands",
         "Default.sublime-keymap",
+        "Main.sublime-menu",
         "messages.json",
         "LICENSE",
         "README.md",
@@ -267,8 +270,8 @@ class InstallerGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("CodeContinue Installer")
-        self.root.geometry("750x680")
-        self.root.resizable(False, False)
+        self.root.geometry("750x780")
+        self.root.resizable(True, True)
         
         # DPI awareness for better font rendering on Windows
         try:
@@ -312,26 +315,31 @@ class InstallerGUI:
         try:
             if os.path.exists(settings_path):
                 with open(settings_path, 'r') as f:
-                    loaded = json.load(f)
-                    
-                    # Map loaded settings to form defaults
-                    if "endpoint" in loaded:
-                        default_settings["endpoint"] = loaded["endpoint"]
-                    if "model" in loaded:
-                        default_settings["model"] = loaded["model"]
-                    if "max_context_lines" in loaded:
-                        default_settings["max_context_lines"] = loaded["max_context_lines"]
-                    if "timeout_ms" in loaded:
-                        default_settings["timeout_ms"] = loaded["timeout_ms"]
-                    if "trigger_language" in loaded:
-                        # Convert list to comma-separated string
-                        langs = loaded["trigger_language"]
-                        if isinstance(langs, list):
-                            default_settings["trigger_language"] = ",".join(langs)
-                        else:
-                            default_settings["trigger_language"] = langs
-                    if "api_key" in loaded:
-                        default_settings["api_key"] = loaded["api_key"]
+                    raw = f.read()
+                
+                # Strip // comments (Sublime settings files allow them)
+                import re
+                raw = re.sub(r'//.*', '', raw)
+                loaded = json.loads(raw)
+                
+                # Map loaded settings to form defaults
+                if "endpoint" in loaded:
+                    default_settings["endpoint"] = loaded["endpoint"]
+                if "model" in loaded:
+                    default_settings["model"] = loaded["model"]
+                if "max_context_lines" in loaded:
+                    default_settings["max_context_lines"] = loaded["max_context_lines"]
+                if "timeout_ms" in loaded:
+                    default_settings["timeout_ms"] = loaded["timeout_ms"]
+                if "trigger_language" in loaded:
+                    # Convert list to comma-separated string
+                    langs = loaded["trigger_language"]
+                    if isinstance(langs, list):
+                        default_settings["trigger_language"] = ",".join(langs)
+                    else:
+                        default_settings["trigger_language"] = langs
+                if "api_key" in loaded:
+                    default_settings["api_key"] = loaded["api_key"]
         except Exception as e:
             # If reading fails, just use built-in defaults
             pass
@@ -440,23 +448,23 @@ class InstallerGUI:
         ttk.Entry(config_frame, textvariable=self.api_key_var, width=58, font=self.label_font, show="*").grid(row=3, column=1, pady=4)
         
         # Max context
-        ttk.Label(config_frame, text="Max Context Lines:", font=self.label_font).grid(row=3, column=0, sticky=tk.W, pady=4, padx=(0, 8))
+        ttk.Label(config_frame, text="Max Context Lines:", font=self.label_font).grid(row=4, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.max_context_var = tk.StringVar(value=str(self.default_settings["max_context_lines"]))
-        ttk.Entry(config_frame, textvariable=self.max_context_var, width=20, font=self.label_font).grid(row=3, column=1, sticky=tk.W, pady=4)
+        ttk.Entry(config_frame, textvariable=self.max_context_var, width=20, font=self.label_font).grid(row=4, column=1, sticky=tk.W, pady=4)
         
         # Timeout
-        ttk.Label(config_frame, text="Timeout (ms):", font=self.label_font).grid(row=4, column=0, sticky=tk.W, pady=4, padx=(0, 8))
+        ttk.Label(config_frame, text="Timeout (ms):", font=self.label_font).grid(row=5, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.timeout_var = tk.StringVar(value=str(self.default_settings["timeout_ms"]))
-        ttk.Entry(config_frame, textvariable=self.timeout_var, width=20, font=self.label_font).grid(row=4, column=1, sticky=tk.W, pady=4)
+        ttk.Entry(config_frame, textvariable=self.timeout_var, width=20, font=self.label_font).grid(row=5, column=1, sticky=tk.W, pady=4)
         
         # Languages
-        ttk.Label(config_frame, text="Trigger Languages:", font=self.label_font).grid(row=5, column=0, sticky=tk.W, pady=4, padx=(0, 8))
+        ttk.Label(config_frame, text="Trigger Languages:", font=self.label_font).grid(row=6, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.languages_var = tk.StringVar(value=self.default_settings["trigger_language"])
-        ttk.Entry(config_frame, textvariable=self.languages_var, width=58, font=self.label_font).grid(row=5, column=1, pady=4)
-        ttk.Label(config_frame, text="(comma-separated)", font=self.small_font).grid(row=6, column=1, sticky=tk.W)
+        ttk.Entry(config_frame, textvariable=self.languages_var, width=58, font=self.label_font).grid(row=6, column=1, pady=4)
+        ttk.Label(config_frame, text="(comma-separated)", font=self.small_font).grid(row=7, column=1, sticky=tk.W)
         
         # Keybinding selection
-        ttk.Label(config_frame, text="Accept Keybinding:", font=self.label_font).grid(row=7, column=0, sticky=tk.W, pady=4, padx=(0, 8))
+        ttk.Label(config_frame, text="Accept Keybinding:", font=self.label_font).grid(row=8, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.keybinding_var = tk.StringVar(value="tab")
         keybinding_combo = ttk.Combobox(
             config_frame,
@@ -466,8 +474,8 @@ class InstallerGUI:
             width=20,
             font=self.label_font
         )
-        keybinding_combo.grid(row=7, column=1, sticky=tk.W, pady=4)
-        ttk.Label(config_frame, text="(key to accept suggestions)", font=self.small_font).grid(row=8, column=1, sticky=tk.W)
+        keybinding_combo.grid(row=8, column=1, sticky=tk.W, pady=4)
+        ttk.Label(config_frame, text="(key to accept suggestions)", font=self.small_font).grid(row=9, column=1, sticky=tk.W)
         
         # Log output
         log_frame = ttk.LabelFrame(self.root, text="Installation Log", padding="12")

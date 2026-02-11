@@ -275,7 +275,10 @@ def install_package(sublime_path, packages_dir, script_dir, user_config=None, ke
     # Files to copy
     files_to_copy = [
         "codeContinue.py",
+        "CodeContinue.sublime-settings",
+        "Default.sublime-commands",
         "Default.sublime-keymap",
+        "Main.sublime-menu",
         "messages.json",
         "LICENSE",
         "README.md",
