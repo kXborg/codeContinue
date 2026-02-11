@@ -81,6 +81,7 @@ Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Foll
   - Plugin is silent by default
 
 </details>
+
 ### API Authentication
 
 For endpoints requiring authentication (like OpenAI):
