@@ -32,7 +32,7 @@ We provide cross-platform installers for Windows, macOS, and Linux.
 ![codeContinue setup wizard](videos/model-name.png)
 
 ### Enable Key Binding
-The keybinding is not enabled by default to avoid possible conflicts with other packages. You can enable it by opening command pallette, type "prefernces : codeContinue Key Binding" and press Enter.
+The keybinding is not enabled by default to avoid possible conflicts with other packages. You can enable it by opening command pallette, type "prefernces : codeContinue Key Binding" and press Enter. It will show two panes, on left suggestion key binding and on right accept key binding. Copy paste the preffered key and save. That's it!
 
 ![codeContinue key binding](videos/key-binding-1.png)
 
