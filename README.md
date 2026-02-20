@@ -28,6 +28,8 @@ We provide cross-platform installers for Windows, macOS, and Linux.
    - After installing codeContinue, a setup wizard appears automatically (if you miss it, just open command pallete and search for "CodeContinue: Configure")
    - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
 
+Here as you can see below, I am just using LMStudio to run Qwen3-Coder-2.5B-Coder model locally. Get the server address and model name exactly from LMStudio and paste it in the setup wizard.
+
 ![codeContinue setup wizard](videos/v1-end-point.png)
 ![codeContinue setup wizard](videos/model-name.png)
 
