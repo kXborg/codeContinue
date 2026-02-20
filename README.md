@@ -13,7 +13,7 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 
 ## Installation
 
-### Option 1: Install via Package Control (coming soon)
+### Option 1: Install via Package Control (Live Now)
 
 We provide cross-platform installers for Windows, macOS, and Linux.
 
