@@ -25,8 +25,18 @@ We provide cross-platform installers for Windows, macOS, and Linux.
    - Open command pallete and search for codeContinue
    - Press Enter to install
 3. Configure codeContinue
-   - After installing codeContinue, a setup wizard appears automatically
+   - After installing codeContinue, a setup wizard appears automatically (if you miss it, just open command pallete and search for "CodeContinue: Configure")
    - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
+
+![codeContinue setup wizard](videos/v1-end-point.png)
+![codeContinue setup wizard](videos/model-name.png)
+
+### Enable Key Binding
+The keybinding is not enabled by default to avoid possible conflicts with other packages. You can enable it by opening command pallette, type "prefernces : codeContinue Key Binding" and press Enter.
+
+![codeContinue key binding](videos/key-binding-1.png)
+
+![codeContinue key binding](videos/key-binding-2.png)
 
 ### Option 2: Manual Install (For Developers)
 ![Manual installation of codeContinue](videos/codeContinue-manual-install.gif)
