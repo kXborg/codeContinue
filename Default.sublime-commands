@@ -25,5 +25,10 @@
             "user_file": "${packages}/User/Default (${platform}).sublime-keymap",
             "default": "[\n\t$0\n]\n"
         }
+    },
+    {
+        "caption": "CodeContinue: Chat about Selection",
+        "command": "code_continue_chat",
+        "description": "Chat with LLM about selected code"
     }
 ]

@@ -181,6 +181,7 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
     files_to_copy = [
         "codeContinue.py",
         "CodeContinue.sublime-settings",
+        "Context.sublime-menu",
         "Default.sublime-commands",
         "Default.sublime-keymap",
         "Main.sublime-menu",

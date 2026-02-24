@@ -7,6 +7,7 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 
 - Fast inline code completion powered by your choice of LLM
 - Simple keyboard shortcuts: Just `Enter` to suggest, `Tab` to accept (⚠️ Note: Keybindings are not enabled by default)
+- **Chat about code**: Select code → right-click → chat with your LLM for explanations, reviews, and suggestions
 - Context-aware suggestions based on surrounding code
 - Configurable for multiple languages (Python, C++, JavaScript, etc.)
 - Works with any OpenAI-compatible API endpoint
