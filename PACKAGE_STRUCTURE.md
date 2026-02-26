@@ -15,7 +15,7 @@ codeContinue/
 ├── messages.json                      # Post-install messages
 ├── messages/
 │   ├── install.txt                    # Installation welcome message
-│   └── 1.1.0.txt                      # Release notes for v1.1.0
+│   └── version.txt                      # Release notes
 ├── README.md                          # User documentation
 └── LICENSE                            # License file
 ```

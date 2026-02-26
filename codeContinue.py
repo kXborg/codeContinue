@@ -782,6 +782,7 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
         chat_view = window.new_file()
         chat_view.set_name("Chat - " + base_name)
         chat_view.set_scratch(True)
+        chat_view.assign_syntax("Packages/Markdown/Markdown.sublime-syntax")
         chat_view.settings().set("word_wrap", True)
         chat_view.settings().set("gutter", False)
         chat_view.settings().set("line_numbers", False)
