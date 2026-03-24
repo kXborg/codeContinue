@@ -7,7 +7,7 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 
 - Fast inline code completion powered by your choice of LLM
 - Simple keyboard shortcuts: Just `Enter` to suggest, `Tab` to accept (⚠️ Note: Keybindings are not enabled by default)
-- **Chat about code**: Select code → right-click → chat with your LLM for explanations, reviews, and suggestions
+- **Chat about code**: Select code >> right-click >> chat with your LLM for explanations, reviews, and suggestions
 - Context-aware suggestions based on surrounding code
 - Configurable for multiple languages (Python, C++, JavaScript, etc.)
 - Works with any OpenAI-compatible API endpoint
@@ -94,7 +94,7 @@ Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Foll
   - Examples: `python`, `cpp`, `javascript`, `typescript`, `java`, `go`, `rust`, etc.
 
 - **debug**: Enable debug logging to console (default: `false`)
-  - Set to `true` to see detailed logs in `View → Show Console`
+  - Set to `true` to see detailed logs in `View >> Show Console`
   - Plugin is silent by default
 
 </details>
@@ -104,7 +104,7 @@ Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Foll
 For endpoints requiring authentication (like OpenAI):
 
 1. **Using the Configure command:**
-   - Press `Ctrl+Shift+P` → "CodeContinue: Configure"
+   - Press `Ctrl+Shift+P` >> "CodeContinue: Configure"
    - When prompted for API Key, enter your key (e.g., `sk-...` for OpenAI)
    - Settings are saved automatically
 
@@ -132,12 +132,12 @@ For endpoints requiring authentication (like OpenAI):
 - Restart Sublime Text: File -> Exit, then reopen
 - Check Sublime Text console (View -> Show Console) for errors
 - Manually run: `Preferences > Package Settings > CodeContinue > Settings`
-- Or use `Ctrl+Shift+P` → "CodeContinue: Configure"
+- Or use `Ctrl+Shift+P` >> "CodeContinue: Configure"
 
 ### Suggestions not appearing
 - Check that your language is in the `trigger_language` list
 - Verify your API endpoint is accessible and correct
-- Enable debug logging: set `"debug": true` in settings, then check `View → Show Console`
+- Enable debug logging: set `"debug": true` in settings, then check `View >> Show Console`
 - Try `Ctrl+Shift+P` -> "CodeContinue: Configure" to verify settings
 - Make sure you have an active API key if required
 

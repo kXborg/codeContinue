@@ -1,4 +1,4 @@
-CodeContinue v1.1.4
+CodeContinue v2.0.0
 ===================
 
 Improvements based on Package Control review feedback:
@@ -17,6 +17,13 @@ New Features:
   Plugin is now silent by default
 
 • Settings file now includes documentation comments
+
+• 🆕New Chat feature — talk to your LLM about code:
+  - Select code >> right-click >> "CodeContinue: Chat about Selection"
+  - Also available via Command Palette
+  - Multi-turn conversation in a dedicated buffer
+  - Streaming responses with a thinking indicator
+  - Conversation history maintained per session
 
 Bug Fixes:
 • Added missing "api_key" to default settings

@@ -11,10 +11,10 @@ On your first use, you'll be prompted to configure:
 3. Your API key (if any)
 
 You can also configure anytime via Command Palette:
-  Ctrl+Shift+P → "CodeContinue: Configure"
+  Ctrl+Shift+P >> "CodeContinue: Configure"
 
 Or manually:
-  Preferences > Package Settings > CodeContinue > Settings
+  Preferences >> Package Settings >> CodeContinue >> Settings
 
 QUICK START
 -----------
@@ -24,7 +24,7 @@ QUICK START
 4. For multi-line suggestions, press Tab multiple times
 
 
-DEFAULT KEYBINDING
+DEFAULT KEYBINDING (not implemented, you have to set it up once)
 ------------------
 • Tab - Accept suggestion
 
@@ -37,11 +37,10 @@ ENDPOINTS & MODELS
 ------------------
 OpenAI:
   Endpoint: https://api.openai.com/v1/chat/completions
-  Model: gpt-3.5-turbo or gpt-4
 
 Local Server (e.g., Ollama, LM Studio):
   Endpoint: http://localhost:8000/v1/chat/completions
-  Model: Your local model name
+  Model: Your local model name (MUST BE SAME)
 
 For more details, see the README file.
 
