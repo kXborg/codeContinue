@@ -8,13 +8,14 @@ This document explains the structure of the codeContinue plugin for Sublime Text
 codeContinue/
 ├── codeContinue.py                    # Main plugin file
 ├── CodeContinue.sublime-settings      # Default settings template
+├── Context.sublime-menu               # Right-click context menu
 ├── Default.sublime-commands           # Command palette entries
 ├── Default.sublime-keymap             # Default keybindings
 ├── Main.sublime-menu                  # Package Settings menu
 ├── messages.json                      # Post-install messages
 ├── messages/
 │   ├── install.txt                    # Installation welcome message
-│   └── 1.1.0.txt                      # Release notes for v1.1.0
+│   └── version.txt                      # Release notes
 ├── README.md                          # User documentation
 └── LICENSE                            # License file
 ```
@@ -34,6 +35,7 @@ codeContinue/
 - Contains `plugin_loaded()` for first-run setup
 - Handles suggestion requests and display
 - Manages phantom rendering and acceptance
+- Provides chat-about-selection feature via output panel
 
 ### CodeContinue.sublime-settings
 - Template with default values and documentation comments
@@ -41,7 +43,11 @@ codeContinue/
 - Customizable via Preferences > Package Settings > CodeContinue
 
 ### Default.sublime-commands
-- Command palette entries for Configure, Suggest, Settings, and Key Bindings
+- Command palette entries for Configure, Suggest, Chat, Settings, and Key Bindings
+
+### Context.sublime-menu
+- Right-click context menu entry for "Chat about Selection"
+- Only enabled when text is selected
 
 ### Default.sublime-keymap
 - Default keybindings (empty by default to avoid conflicts)
