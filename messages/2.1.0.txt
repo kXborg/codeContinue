@@ -1,0 +1,45 @@
+CodeContinue v2.1.0
+===================
+
+Bug Fixes:
+• API key is now sent with inline-completion requests
+  (cloud endpoints requiring auth, e.g. OpenAI, were rejected before)
+
+• Default request timeout corrected to 30s when the settings file
+  is missing or partial (previously fell back to 0.15s and always
+  timed out)
+
+• Phantom preview no longer breaks on `<`, `>`, `&` in completions
+  (e.g. C++ templates, JSX, generics) — the suggestion now HTML-escapes
+  before rendering
+
+• First-run setup wizard now prompts for an optional API key as a
+  third step (was only asking for endpoint + model)
+
+• Multi-line suggestion accept now preserves the model's intended
+  indentation. Previously, lines after the first were inserted at
+  column 0 even when they were meant to be indented
+
+• Expanded model control-token cleanup. Strips Llama 3 markers
+  (<|begin_of_text|>, <|eot_id|>, ...), ChatML (<|im_start|>,
+  <|im_end|>), GPT-style (<|endoftext|>), FIM markers
+  (<|fim_prefix|>, <|fim_middle|>, <|fim_suffix|>), and role tokens
+
+• "CodeContinue: Configure" no longer crashes with
+  AttributeError when invoked from the Command Palette
+
+• Errors are now logged to the Sublime console without needing
+  to enable the `debug` setting
+
+• Network / parse error messages now reliably reach the status bar
+  (they were being dispatched from a background thread and
+  occasionally got lost)
+
+Internal:
+• Plugin code split into focused submodules under `utils/`
+  (log.py, text_utils.py, api.py, settings.py, suggest.py, chat.py).
+  No user-visible change; sets up the codebase for tests and
+  future feature work.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

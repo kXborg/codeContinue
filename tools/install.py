@@ -287,7 +287,7 @@ def install_package(sublime_path, packages_dir, script_dir, user_config=None, ke
     ]
     
     # Directories to copy
-    dirs_to_copy = ["messages"]
+    dirs_to_copy = ["messages", "utils"]
     
     # Copy files
     for file_name in files_to_copy:

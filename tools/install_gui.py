@@ -191,7 +191,7 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
         "PACKAGE_STRUCTURE.md",
     ]
     
-    dirs_to_copy = ["messages"]
+    dirs_to_copy = ["messages", "utils"]
     
     for file_name in files_to_copy:
         src = os.path.join(script_dir, file_name)

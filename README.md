@@ -87,7 +87,7 @@ Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Foll
 - **max_context_lines**: Number of lines of context to send (default: 30)
   - Increase for more context, decrease for faster responses
 
-- **timeout_ms**: Request timeout in milliseconds (default: 20000)
+- **timeout_ms**: Request timeout in milliseconds (default: 30000)
   - Increase if using slower endpoints
 
 - **trigger_language**: Array of language scopes to enable the plugin
