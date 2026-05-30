@@ -12,14 +12,40 @@ from .api import build_api_headers
 from .log import _log
 
 
-# chat_view.id() -> session dict (history, endpoint, model, etc.)
-_chat_sessions = {}
-# chat_view.id() set: identifies chat views (used to gate event listeners)
-_chat_view_ids = set()
+class ChatState:
+    """Per-chat-view state for the chat-about-selection feature.
+
+    Replaces the former module-level dicts/sets (``_chat_sessions``,
+    ``_chat_view_ids``, ``_original_layouts``, ``_chat_requesting``).
+    Accessed via the module-level ``_states`` dict, keyed on ``chat_view.id()``.
+    """
+
+    __slots__ = (
+        "history",
+        "endpoint",
+        "model",
+        "timeout_s",
+        "headers",
+        "code",
+        "lang",
+        "requesting",
+    )
+
+    def __init__(self, history, endpoint, model, timeout_s, headers, code, lang):
+        self.history = history
+        self.endpoint = endpoint
+        self.model = model
+        self.timeout_s = timeout_s
+        self.headers = headers
+        self.code = code
+        self.lang = lang
+        self.requesting = False  # True while an API call is in-flight
+
+
+# chat_view.id() -> ChatState
+_states = {}
 # window.id() -> original layout, restored when the chat view closes
 _original_layouts = {}
-# chat_view.id() set: prevents re-entrant request sending
-_chat_requesting = set()
 
 
 CHAT_SYSTEM_PROMPT = (
@@ -87,82 +113,76 @@ def _chat_remove_thinking(chat_view):
         chat_view.set_read_only(True)
 
 
-def _chat_do_api_call(chat_view, session):
+def _chat_do_api_call(chat_view, state):
     """Send conversation history to LLM and render the response in the chat view."""
     cvid = chat_view.id()
 
-    endpoint = session["endpoint"]
-    model = session["model"]
-    timeout_s = session["timeout_s"]
-    headers = session["headers"]
-    history = session["history"]
-
-    if not endpoint or not model:
+    if not state.endpoint or not state.model:
         sublime.set_timeout(lambda: _chat_view_append(chat_view, "\n⚠ Error: endpoint or model not configured.\n"), 0)
-        _chat_requesting.discard(cvid)
+        state.requesting = False
         return
 
     data = {
-        "model": model,
-        "messages": history,
+        "model": state.model,
+        "messages": state.history,
         "max_tokens": 2048,
         "temperature": 0.5,
     }
 
-    _log("Chat: Sending request to {0}".format(endpoint))
+    _log("Chat: Sending request to {0}".format(state.endpoint))
 
     def do_request():
         try:
             req = urllib.request.Request(
-                endpoint,
+                state.endpoint,
                 data=json.dumps(data).encode(),
-                headers=headers,
+                headers=state.headers,
             )
-            with urllib.request.urlopen(req, timeout=timeout_s) as response:
+            with urllib.request.urlopen(req, timeout=state.timeout_s) as response:
                 result = json.loads(response.read().decode())
                 reply = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
 
                 if reply:
-                    session["history"].append({"role": "assistant", "content": reply})
+                    state.history.append({"role": "assistant", "content": reply})
 
                     def show_reply():
-                        if cvid not in _chat_view_ids:
+                        if cvid not in _states:
                             return
                         _chat_remove_thinking(chat_view)
                         _chat_view_append(chat_view, "\n Assistant: " + reply + "\n")
                         _chat_show_input_area(chat_view)
-                        _chat_requesting.discard(cvid)
+                        state.requesting = False
 
                     sublime.set_timeout(show_reply, 0)
                 else:
                     def show_empty():
-                        if cvid not in _chat_view_ids:
+                        if cvid not in _states:
                             return
                         _chat_remove_thinking(chat_view)
                         _chat_view_append(chat_view, "\n⚠ Empty response from model.\n")
                         _chat_show_input_area(chat_view)
-                        _chat_requesting.discard(cvid)
+                        state.requesting = False
                     sublime.set_timeout(show_empty, 0)
 
         except urllib.error.URLError as e:
             _log("Chat: Network error: {0}".format(str(e)[:100]))
             def show_net_err():
-                if cvid not in _chat_view_ids:
+                if cvid not in _states:
                     return
                 _chat_remove_thinking(chat_view)
                 _chat_view_append(chat_view, "\n⚠ Network error: {0}\n".format(str(e)[:100]))
                 _chat_show_input_area(chat_view)
-                _chat_requesting.discard(cvid)
+                state.requesting = False
             sublime.set_timeout(show_net_err, 0)
         except Exception as e:
             _log("Chat: Error: {0}".format(str(e)[:100]))
             def show_gen_err():
-                if cvid not in _chat_view_ids:
+                if cvid not in _states:
                     return
                 _chat_remove_thinking(chat_view)
                 _chat_view_append(chat_view, "\n⚠ Error: {0}\n".format(str(e)[:100]))
                 _chat_show_input_area(chat_view)
-                _chat_requesting.discard(cvid)
+                state.requesting = False
             sublime.set_timeout(show_gen_err, 0)
 
     thread = threading.Thread(target=do_request)
@@ -173,31 +193,32 @@ def _chat_do_api_call(chat_view, session):
 def _chat_send_message(chat_view):
     """Extract user input, format it, and send to LLM."""
     cvid = chat_view.id()
-    session = _chat_sessions.get(cvid)
-    if not session or cvid in _chat_requesting:
+    state = _states.get(cvid)
+    if not state or state.requesting:
         return
 
     user_text = _chat_get_user_input(chat_view)
     if not user_text:
         return
 
-    _chat_requesting.add(cvid)
+    state.requesting = True
     _chat_lock_and_format_input(chat_view, user_text)
-    session["history"].append({"role": "user", "content": user_text})
+    state.history.append({"role": "user", "content": user_text})
     _chat_view_append(chat_view, "\n⏳ Thinking...\n")
-    _chat_do_api_call(chat_view, session)
+    _chat_do_api_call(chat_view, state)
 
 
 class ChatEventListener(sublime_plugin.EventListener):
     """Handle Enter key and view close in chat views."""
 
     def on_text_command(self, view, command_name, args):
-        if view.id() not in _chat_view_ids:
+        if view.id() not in _states:
             return None
 
         if command_name == "insert" and args and args.get("characters") == "\n":
+            state = _states.get(view.id())
             user_text = _chat_get_user_input(view)
-            if user_text and view.id() not in _chat_requesting:
+            if user_text and state and not state.requesting:
                 _chat_send_message(view)
                 return ("noop", None)
 
@@ -206,12 +227,10 @@ class ChatEventListener(sublime_plugin.EventListener):
     def on_close(self, view):
         """Clean up when a chat view is closed and restore window layout."""
         vid = view.id()
-        if vid not in _chat_view_ids:
+        if vid not in _states:
             return
 
-        _chat_view_ids.discard(vid)
-        _chat_sessions.pop(vid, None)
-        _chat_requesting.discard(vid)
+        _states.pop(vid, None)
 
         window = sublime.active_window()
         if window and window.id() in _original_layouts:
@@ -270,7 +289,6 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
         window.focus_view(chat_view)
 
         cvid = chat_view.id()
-        _chat_view_ids.add(cvid)
 
         initial_msg = (
             "Here is the selected code from `{0}` ({1}):\n\n"
@@ -278,19 +296,19 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
             "I'd like to discuss this code."
         ).format(base_name, lang, selected_text)
 
-        session = {
-            "history": [
+        state = ChatState(
+            history=[
                 {"role": "system", "content": CHAT_SYSTEM_PROMPT},
                 {"role": "user", "content": initial_msg},
             ],
-            "endpoint": settings.get("endpoint", ""),
-            "model": settings.get("model", ""),
-            "timeout_s": settings.get("timeout_ms", 30000) / 1000.0,
-            "headers": build_api_headers(settings),
-            "code": selected_text,
-            "lang": lang,
-        }
-        _chat_sessions[cvid] = session
+            endpoint=settings.get("endpoint", ""),
+            model=settings.get("model", ""),
+            timeout_s=settings.get("timeout_ms", 30000) / 1000.0,
+            headers=build_api_headers(settings),
+            code=selected_text,
+            lang=lang,
+        )
+        _states[cvid] = state
 
         header = (
             "═══ CodeContinue Chat ═══\n"
@@ -303,8 +321,8 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
         chat_view.set_read_only(True)
 
         _chat_view_append(chat_view, "\n⏳ Thinking...\n")
-        _chat_requesting.add(cvid)
-        _chat_do_api_call(chat_view, session)
+        state.requesting = True
+        _chat_do_api_call(chat_view, state)
 
     def is_enabled(self):
         """Only enable when there is a non-empty selection."""

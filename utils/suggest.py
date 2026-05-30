@@ -1,6 +1,6 @@
 """Inline-suggestion flow: phantom rendering, Enter-trigger, accept command.
 
-State is kept in module-level dicts keyed on `view.id()`. Sublime calls the
+State is kept in a SuggestState class keyed on `view.id()`. Sublime calls the
 EventListener / TextCommand classes here directly, but only because
 codeContinue.py imports them into the top-level package namespace.
 """
@@ -21,17 +21,53 @@ from .settings import is_endpoint_configured, show_endpoint_config_panel
 from .text_utils import clean_markdown_fences, strip_common_indent
 
 
-# view.id() -> (PhantomSet, [normalized_lines], common_prefix)
-phantoms = {}
-# view.id() -> seconds since epoch of last suggest request (rate-limit gate)
-last_request_time = {}
-# view.id() -> request_id, used to ignore stale responses
-pending_requests = {}
-# view.id() set: phantom-clearing is suppressed while we're inserting
-suppress_clear = set()
-# view.id() -> wall-clock deadline. While `time.time() < deadline`, on_modified
-# won't clear the phantom — gives the accept command time to settle.
-accept_grace_until = {}
+class SuggestState:
+    """Per-view state for the inline-suggestion flow.
+
+    Replaces the former module-level dicts/sets (``phantoms``,
+    ``last_request_time``, ``pending_requests``, ``suppress_clear``,
+    ``accept_grace_until``).  Accessed via the module-level ``_states`` dict,
+    keyed on ``view.id()``.
+    """
+
+    __slots__ = (
+        "phantom_set",
+        "remaining_lines",
+        "common_prefix",
+        "last_request_time",
+        "pending_request_id",
+        "suppress_clear",
+        "accept_grace_until",
+    )
+
+    def __init__(self):
+        self.phantom_set = None        # sublime.PhantomSet or None
+        self.remaining_lines = None    # [str] or None
+        self.common_prefix = ""        # stripped indent prefix
+        self.last_request_time = 0.0   # wall-clock timestamp of last request
+        self.pending_request_id = None # (vid, cursor, timestamp) or None
+        self.suppress_clear = False    # True while an accept is in-flight
+        self.accept_grace_until = 0.0  # wall-clock deadline
+
+    @property
+    def has_phantom(self):
+        return self.phantom_set is not None
+
+
+# view.id() -> SuggestState
+_states = {}
+
+
+def _get_state(vid):
+    """Return the SuggestState for *vid*, creating one if needed."""
+    if vid not in _states:
+        _states[vid] = SuggestState()
+    return _states[vid]
+
+
+def _drop_state(vid):
+    """Remove all state for *vid* (e.g. after phantoms are cleared)."""
+    _states.pop(vid, None)
 
 
 class CodeContinueListener(sublime_plugin.EventListener):
@@ -39,11 +75,11 @@ class CodeContinueListener(sublime_plugin.EventListener):
         # Clear any phantom suggestion when the user modifies text
         # (skip clearing if we're currently accepting a suggestion).
         vid = view.id()
-        if vid in phantoms:
-            if vid in suppress_clear:
+        state = _states.get(vid)
+        if state and state.has_phantom:
+            if state.suppress_clear:
                 return
-            grace = accept_grace_until.get(vid, 0)
-            if time.time() < grace:
+            if time.time() < state.accept_grace_until:
                 return
             clear_phantoms(view)
         return
@@ -59,20 +95,20 @@ class CodeContinueListener(sublime_plugin.EventListener):
 
         if command_name == "insert" and args and args.get("characters") == "\n":
             _log("Enter pressed; evaluating trigger")
-            existing = phantoms.get(view.id())
-            if existing and isinstance(existing[1], list) and len(existing[1]) > 0:
-                _log("Enter ignored because cached suggestion exists")
-                return
             vid = view.id()
-            if vid in phantoms:
+            state = _states.get(vid)
+            if state and state.has_phantom:
+                if state.remaining_lines and len(state.remaining_lines) > 0:
+                    _log("Enter ignored because cached suggestion exists")
+                    return
                 _log("Enter ignored because phantom already visible")
                 return
             now = time.time()
-            last = last_request_time.get(vid, 0)
-            if now - last < 1.0:
+            st = _get_state(vid)
+            if now - st.last_request_time < 1.0:
                 _log("Enter ignored due to rate limit <1000ms")
                 return
-            last_request_time[vid] = now
+            st.last_request_time = now
             # Slight delay so the cursor has moved to the new line
             sublime.set_timeout(lambda: view.run_command("code_continue_suggest"), 50)
 
@@ -118,15 +154,16 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
         prompt = "Continue the following code:\n{0}".format(code_before)
 
         vid = view.id()
+        state = _get_state(vid)
         request_id = (vid, cursor, time.time())
-        pending_requests[vid] = request_id
+        state.pending_request_id = request_id
 
         sublime.status_message("CodeContinue: Fetching suggestion...")
 
         def fetch_completion():
             request_start_time = time.time()
             try:
-                if pending_requests.get(vid) != request_id:
+                if state.pending_request_id != request_id:
                     return
 
                 data = {
@@ -159,26 +196,26 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
 
                     completion = clean_markdown_fences(completion)
 
-                    if pending_requests.get(vid) == request_id and completion:
+                    if state.pending_request_id == request_id and completion:
                         sublime.set_timeout(lambda: show_phantom(view, cursor, completion), 0)
-                    elif pending_requests.get(vid) == request_id:
+                    elif state.pending_request_id == request_id:
                         sublime.set_timeout(lambda: sublime.status_message("CodeContinue: Empty response"), 0)
             except urllib.error.URLError as e:
                 elapsed = time.time() - request_start_time
                 _log_error("Network error after {0:.2f}s: {1}".format(elapsed, str(e)[:200]))
-                if pending_requests.get(vid) == request_id:
+                if state.pending_request_id == request_id:
                     msg = "CodeContinue: Network error - {0}".format(str(e)[:50])
                     sublime.set_timeout(lambda: sublime.status_message(msg), 0)
             except (ValueError, KeyError) as e:
                 elapsed = time.time() - request_start_time
                 _log_error("Parse error after {0:.2f}s: {1}".format(elapsed, str(e)[:200]))
-                if pending_requests.get(vid) == request_id:
+                if state.pending_request_id == request_id:
                     msg = "CodeContinue: Parse error - {0}".format(str(e)[:50])
                     sublime.set_timeout(lambda: sublime.status_message(msg), 0)
             except Exception as e:
                 elapsed = time.time() - request_start_time
                 _log_error("Unexpected error after {0:.2f}s: {1}".format(elapsed, str(e)[:200]))
-                if pending_requests.get(vid) == request_id:
+                if state.pending_request_id == request_id:
                     msg = "CodeContinue: Unexpected error - {0}".format(str(e)[:50])
                     sublime.set_timeout(lambda: sublime.status_message(msg), 0)
 
@@ -189,10 +226,11 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         vid = view.id()
-        if vid not in phantoms:
+        state = _states.get(vid)
+        if not state or not state.has_phantom:
             return
 
-        phantom_set, remaining, common_prefix = phantoms[vid]
+        remaining = state.remaining_lines
         if not isinstance(remaining, list) or len(remaining) == 0:
             clear_phantoms(view)
             return
@@ -202,7 +240,7 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
             clear_phantoms(view)
             return
 
-        suppress_clear.add(vid)
+        state.suppress_clear = True
         try:
             insert_pos = sel[0].begin()
 
@@ -212,9 +250,9 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
             # After we insert "\n" the cursor moves to column 0, so re-apply the
             # stripped prefix to restore each remaining line's original column.
             rem_lines = remaining
-            if rem_lines and common_prefix:
-                rem_lines = [common_prefix + ln for ln in rem_lines]
-                common_prefix = ""
+            if rem_lines and state.common_prefix:
+                rem_lines = [state.common_prefix + ln for ln in rem_lines]
+                state.common_prefix = ""
 
             text_to_insert = first_line
             if rem_lines:
@@ -228,25 +266,27 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
 
             if rem_lines:
                 preview = "\n".join(rem_lines)
-                ph = phantom_set
+                ph = state.phantom_set
                 ph.update([sublime.Phantom(
                     sublime.Region(new_cursor, new_cursor),
                     '<span style="color: gray">{0}</span>'.format(html.escape(preview)),
                     sublime.LAYOUT_INLINE,
                 )])
-                phantoms[vid] = (ph, rem_lines, common_prefix)
+                state.remaining_lines = rem_lines
                 view.set_status('code_continue_visible', 'true')
             else:
                 clear_phantoms(view)
         finally:
             # Keep a short grace window to avoid immediate on_modified clearing
-            accept_grace_until[vid] = time.time() + 0.2
-            if vid in suppress_clear:
-                suppress_clear.remove(vid)
+            state.accept_grace_until = time.time() + 0.2
+            state.suppress_clear = False
 
 
 def show_phantom(view, cursor, suggestion):
     clear_phantoms(view)
+    vid = view.id()
+    state = _get_state(vid)
+
     phantom_set = sublime.PhantomSet(view)
 
     lines = suggestion.split('\n')
@@ -265,12 +305,17 @@ def show_phantom(view, cursor, suggestion):
         sublime.LAYOUT_INLINE,
     )
     phantom_set.update([phantom])
-    phantoms[view.id()] = (phantom_set, norm_lines, common_prefix)
+
+    state.phantom_set = phantom_set
+    state.remaining_lines = norm_lines
+    state.common_prefix = common_prefix
     view.set_status('code_continue_visible', 'true')
 
 
 def clear_phantoms(view):
-    if view.id() in phantoms:
-        phantoms[view.id()][0].update([])
-        del phantoms[view.id()]
+    vid = view.id()
+    state = _states.get(vid)
+    if state and state.has_phantom:
+        state.phantom_set.update([])
+    _drop_state(vid)
     view.erase_status('code_continue_visible')

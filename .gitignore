@@ -159,6 +159,10 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Project root specific ignores
+PLAN.md
+implementation_plan.md
+
 # Pyre type checker
 .pyre/
 
@@ -205,6 +209,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-
-# Project root specific ignores
-PLAN.md
