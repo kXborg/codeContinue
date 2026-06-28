@@ -8,7 +8,7 @@ import urllib.request
 import sublime
 import sublime_plugin
 
-from .api import build_api_headers
+from .api import get_provider
 from .log import _log, _log_error
 from .text_utils import clean_markdown_fences
 from .settings import is_endpoint_configured, show_endpoint_config_panel
@@ -59,26 +59,24 @@ class CodeContinueEditCommand(sublime_plugin.TextCommand):
                     "Code:\n{1}"
                 ).format(instruction, selected_text)
 
-                data = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": "You are a code refactoring expert. Output ONLY the rewritten code without any markdown formatting, backticks, explanations, comments, or inline comments (unless requested by the user). Write clean code."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "max_tokens": 2048,
-                    "temperature": 0.3
-                }
+                messages = [
+                    {"role": "system", "content": "You are a code refactoring expert. Output ONLY the rewritten code without any markdown formatting, backticks, explanations, comments, or inline comments (unless requested by the user). Write clean code."},
+                    {"role": "user", "content": prompt}
+                ]
+                
+                provider = get_provider(endpoint, settings)
+                data = provider.format_payload(model, messages, 2048, 0.3)
 
                 _log("Edit: Sending request to {0}".format(endpoint))
                 try:
                     req = urllib.request.Request(
                         endpoint,
                         data=json.dumps(data).encode(),
-                        headers=build_api_headers(settings),
+                        headers=provider.build_headers(settings),
                     )
                     with urllib.request.urlopen(req, timeout=timeout_ms) as response:
                         result = json.loads(response.read().decode())
-                        reply = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                        reply = provider.parse_response(result)
 
                         if reply:
                             reply = clean_markdown_fences(reply)

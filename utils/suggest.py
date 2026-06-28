@@ -15,7 +15,7 @@ import urllib.request
 import sublime
 import sublime_plugin
 
-from .api import build_api_headers
+from .api import get_provider
 from .log import _log, _log_error
 from .settings import is_endpoint_configured, show_endpoint_config_panel
 from .text_utils import clean_markdown_fences, strip_common_indent
@@ -166,27 +166,25 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 if state.pending_request_id != request_id:
                     return
 
-                data = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": "You are a code completion expert. Output ONLY the code continuation without any markdown formatting, backticks, explanations, comments, or inline comments. Write clean code without any commentary. Do NOT include the <CURSOR_HERE> marker in your response."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "max_tokens": 1024,
-                    "temperature": 0.3
-                }
+                messages = [
+                    {"role": "system", "content": "You are a code completion expert. Output ONLY the code continuation without any markdown formatting, backticks, explanations, comments, or inline comments. Write clean code without any commentary. Do NOT include the <CURSOR_HERE> marker in your response."},
+                    {"role": "user", "content": prompt}
+                ]
+                provider = get_provider(endpoint, settings)
+                data = provider.format_payload(model, messages, 1024, 0.3)
+
                 _log("Sending request to endpoint {0} (timeout: {1:.1f}s)".format(endpoint, timeout_ms))
                 req = urllib.request.Request(
                     endpoint,
                     data=json.dumps(data).encode(),
-                    headers=build_api_headers(settings),
+                    headers=provider.build_headers(settings),
                 )
                 response_start_time = time.time()
                 with urllib.request.urlopen(req, timeout=timeout_ms) as response:
                     response_received_time = time.time()
                     result = json.loads(response.read().decode())
                     _log("Received Response : {}".format(result))
-                    completion = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                    completion = provider.parse_response(result)
                     parse_complete_time = time.time()
 
                     response_time = response_received_time - response_start_time

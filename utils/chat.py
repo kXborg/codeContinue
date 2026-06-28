@@ -8,7 +8,7 @@ import urllib.request
 import sublime
 import sublime_plugin
 
-from .api import build_api_headers
+from .api import get_provider
 from .log import _log
 
 
@@ -29,9 +29,10 @@ class ChatState:
         "code",
         "lang",
         "requesting",
+        "provider",
     )
 
-    def __init__(self, history, endpoint, model, timeout_s, headers, code, lang):
+    def __init__(self, history, endpoint, model, timeout_s, headers, code, lang, provider):
         self.history = history
         self.endpoint = endpoint
         self.model = model
@@ -40,6 +41,7 @@ class ChatState:
         self.code = code
         self.lang = lang
         self.requesting = False  # True while an API call is in-flight
+        self.provider = provider
 
 
 # chat_view.id() -> ChatState
@@ -122,12 +124,7 @@ def _chat_do_api_call(chat_view, state):
         state.requesting = False
         return
 
-    data = {
-        "model": state.model,
-        "messages": state.history,
-        "max_tokens": 2048,
-        "temperature": 0.5,
-    }
+    data = state.provider.format_payload(state.model, state.history, 2048, 0.5)
 
     _log("Chat: Sending request to {0}".format(state.endpoint))
 
@@ -140,7 +137,7 @@ def _chat_do_api_call(chat_view, state):
             )
             with urllib.request.urlopen(req, timeout=state.timeout_s) as response:
                 result = json.loads(response.read().decode())
-                reply = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                reply = state.provider.parse_response(result)
 
                 if reply:
                     state.history.append({"role": "assistant", "content": reply})
@@ -296,17 +293,21 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
             "I'd like to discuss this code."
         ).format(base_name, lang, selected_text)
 
+        endpoint = settings.get("endpoint", "")
+        provider = get_provider(endpoint, settings)
+        
         state = ChatState(
             history=[
                 {"role": "system", "content": CHAT_SYSTEM_PROMPT},
                 {"role": "user", "content": initial_msg},
             ],
-            endpoint=settings.get("endpoint", ""),
+            endpoint=endpoint,
             model=settings.get("model", ""),
             timeout_s=settings.get("timeout_ms", 30000) / 1000.0,
-            headers=build_api_headers(settings),
+            headers=provider.build_headers(settings),
             code=selected_text,
             lang=lang,
+            provider=provider,
         )
         _states[cvid] = state
 
