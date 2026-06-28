@@ -1,0 +1,12 @@
+CodeContinue v2.2.0
+===================
+
+New Features:
+• Inline edit / refactor (Ctrl+K style): Select code, right-click, and choose "CodeContinue: Edit Selection" to instantly rewrite your code based on an instruction.
+• Anthropic / Messages API support: You can now use Anthropic's Claude models seamlessly by configuring an Anthropic endpoint and API key.
+
+Enhancements:
+• Updated chat feature: The chat view now uses richer Markdown formatting with proper headers and visual separators for a cleaner, more readable conversation flow.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues
