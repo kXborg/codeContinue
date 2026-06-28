@@ -97,14 +97,14 @@ def _chat_lock_and_format_input(chat_view, user_text):
     chat_view.set_read_only(False)
     chat_view.run_command("select_all")
     chat_view.run_command("left_delete")
-    chat_view.run_command("append", {"characters": before + "\n\n You: " + user_text + "\n"})
+    chat_view.run_command("append", {"characters": before + "\n\n### You\n\n" + user_text + "\n"})
     chat_view.set_read_only(True)
 
 
 def _chat_remove_thinking(chat_view):
     """Remove the Thinking indicator from the chat view."""
     content = chat_view.substr(sublime.Region(0, chat_view.size()))
-    marker = "\n⏳ Thinking...\n"
+    marker = "\n⏳ *Thinking...*\n"
     pos = content.rfind(marker)
     if pos >= 0:
         cleaned = content[:pos] + content[pos + len(marker):]
@@ -146,7 +146,7 @@ def _chat_do_api_call(chat_view, state):
                         if cvid not in _states:
                             return
                         _chat_remove_thinking(chat_view)
-                        _chat_view_append(chat_view, "\n Assistant: " + reply + "\n")
+                        _chat_view_append(chat_view, "\n---\n\n### CodeContinue\n\n" + reply + "\n")
                         _chat_show_input_area(chat_view)
                         state.requesting = False
 
@@ -201,7 +201,7 @@ def _chat_send_message(chat_view):
     state.requesting = True
     _chat_lock_and_format_input(chat_view, user_text)
     state.history.append({"role": "user", "content": user_text})
-    _chat_view_append(chat_view, "\n⏳ Thinking...\n")
+    _chat_view_append(chat_view, "\n---\n\n⏳ *Thinking...*\n")
     _chat_do_api_call(chat_view, state)
 
 
@@ -312,16 +312,19 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
         _states[cvid] = state
 
         header = (
-            "═══ CodeContinue Chat ═══\n"
-            "File: {0}  |  Language: {1}\n\n"
-            "─── Selected Code ───\n"
+            "## CodeContinue Chat\n"
+            "**File:** `{0}` | **Language:** `{1}`\n\n"
+            "---\n\n"
+            "### Selected Code\n"
+            "```{1}\n"
             "{2}\n"
+            "```\n"
         ).format(base_name, lang, selected_text)
 
         chat_view.run_command("append", {"characters": header})
         chat_view.set_read_only(True)
 
-        _chat_view_append(chat_view, "\n⏳ Thinking...\n")
+        _chat_view_append(chat_view, "\n---\n\n⏳ *Thinking...*\n")
         state.requesting = True
         _chat_do_api_call(chat_view, state)
 
