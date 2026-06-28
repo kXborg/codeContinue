@@ -30,5 +30,10 @@
         "caption": "CodeContinue: Chat about Selection",
         "command": "code_continue_chat",
         "description": "Chat with LLM about selected code"
+    },
+    {
+        "caption": "CodeContinue: Edit Selection",
+        "command": "code_continue_edit",
+        "description": "Rewrite selected code using an instruction"
     }
 ]

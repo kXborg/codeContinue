@@ -27,3 +27,7 @@ from .utils.chat import (  # noqa: F401
     ChatEventListener,
     CodeContinueChatCommand,
 )
+from .utils.edit import (  # noqa: F401
+    CodeContinueEditCommand,
+    CodeContinueReplaceSelectionCommand,
+)
