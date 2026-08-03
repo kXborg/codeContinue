@@ -310,7 +310,8 @@ class InstallerGUI:
             "max_context_lines": 30,
             "timeout_ms": 20000,
             "trigger_language": "python,cpp,javascript",
-            "api_key": ""
+            "api_key": "",
+            "system_prompt": ""
         }
         
         try:
@@ -341,6 +342,8 @@ class InstallerGUI:
                         default_settings["trigger_language"] = langs
                 if "api_key" in loaded:
                     default_settings["api_key"] = loaded["api_key"]
+                if "system_prompt" in loaded:
+                    default_settings["system_prompt"] = loaded["system_prompt"]
         except Exception as e:
             # If reading fails, just use built-in defaults
             pass
@@ -477,6 +480,17 @@ class InstallerGUI:
         )
         keybinding_combo.grid(row=8, column=1, sticky=tk.W, pady=4)
         ttk.Label(config_frame, text="(key to accept suggestions)", font=self.small_font).grid(row=9, column=1, sticky=tk.W)
+
+        # System prompt
+        ttk.Label(config_frame, text="System Prompt (optional):", font=self.label_font).grid(row=10, column=0, sticky=tk.NW, pady=4, padx=(0, 8))
+        self.system_prompt_var = tk.StringVar(value=self.default_settings.get("system_prompt", ""))
+        ttk.Entry(config_frame, textvariable=self.system_prompt_var, width=58, font=self.label_font).grid(row=10, column=1, pady=4)
+        ttk.Label(
+            config_frame,
+            text="Leave blank to use the built-in default. Useful for smaller models.",
+            font=self.small_font,
+            foreground="#888"
+        ).grid(row=11, column=1, sticky=tk.W)
         
         # Log output
         log_frame = ttk.LabelFrame(self.root, text="Installation Log", padding="12")
@@ -564,9 +578,10 @@ class InstallerGUI:
                 "model": self.model_var.get(),
                 "max_context_lines": int(self.max_context_var.get()),
                 "timeout_ms": int(self.timeout_var.get()),
-                "trigger_language": languages
+                "trigger_language": languages,
+                "system_prompt": self.system_prompt_var.get().strip()
             }
-            
+
             if self.api_key_var.get():
                 config["api_key"] = self.api_key_var.get()
             

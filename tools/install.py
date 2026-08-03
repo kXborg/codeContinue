@@ -70,6 +70,12 @@ def configure_settings():
         languages = [lang.strip() for lang in languages_input.split(",")]
     else:
         languages = ["python", "cpp", "javascript"]
+
+    # System prompt (optional)
+    print()
+    print("Custom system prompt (optional, press Enter to use the built-in default).")
+    print("Useful for smaller models or to suppress docstrings/comments.")
+    system_prompt = input("System prompt: ").strip()
     
     # Keybinding selection
     print()
@@ -95,9 +101,10 @@ def configure_settings():
         "model": model,
         "max_context_lines": max_context,
         "timeout_ms": timeout,
-        "trigger_language": languages
+        "trigger_language": languages,
+        "system_prompt": system_prompt
     }
-    
+
     if api_key:
         config["api_key"] = api_key
     
