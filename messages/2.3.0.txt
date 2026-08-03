@@ -1,0 +1,27 @@
+CodeContinue v2.3.0
+===================
+
+New Features:
+• Custom system prompt: Tailor the AI's behaviour to your workflow. Set "system_prompt"
+  in your user settings, or configure it interactively via the Configure Wizard
+  (Package Settings → CodeContinue → Configure Wizard). Leave blank to keep the
+  built-in default. Useful for guiding smaller models or suppressing docstrings/comments.
+
+Bug Fixes:
+• Remote server 403 errors: Added a User-Agent header to all API requests, preventing
+  reverse proxies and hosted endpoints from rejecting the plugin with HTTP 403 Forbidden.
+
+Debug Improvements:
+• The raw HTTP response body is now logged (up to 2000 chars) before JSON parsing
+  when debug: true is enabled. On parse failures, the raw body is also printed via
+  the error logger so you can diagnose malformed or streaming responses without
+  digging through network logs.
+
+Installer:
+• Both the CLI (install.py) and GUI (install_gui.py) installers now write user
+  configuration to Packages/User/ (the standard Sublime Text override location)
+  instead of overwriting the package defaults file. The defaults file now ships
+  with the full built-in system prompt visible for reference.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues
