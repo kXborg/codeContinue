@@ -7,7 +7,7 @@ pass either a `sublime.Settings` object or a plain dict in tests.
 
 class OpenAIProvider:
     def build_headers(self, settings):
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}
         api_key = settings.get("api_key", "")
         if api_key:
             headers["Authorization"] = "Bearer {0}".format(api_key)
@@ -32,6 +32,7 @@ class AnthropicProvider:
     def build_headers(self, settings):
         headers = {
             "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0",
             "anthropic-version": "2023-06-01"
         }
         api_key = settings.get("api_key", "")
