@@ -166,8 +166,17 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 if state.pending_request_id != request_id:
                     return
 
+                _DEFAULT_SYSTEM_PROMPT = (
+                    "You are a code completion expert. Output ONLY the code continuation "
+                    "without any markdown formatting, backticks, explanations, comments, or "
+                    "inline comments. Write clean code without any commentary. "
+                    "Do NOT include the <CURSOR_HERE> marker in your response."
+                )
+                system_prompt = settings.get("system_prompt", "").strip() or _DEFAULT_SYSTEM_PROMPT
+                _log("Using system prompt: {0}".format(system_prompt[:120]))
+
                 messages = [
-                    {"role": "system", "content": "You are a code completion expert. Output ONLY the code continuation without any markdown formatting, backticks, explanations, comments, or inline comments. Write clean code without any commentary. Do NOT include the <CURSOR_HERE> marker in your response."},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}
                 ]
                 provider = get_provider(endpoint, settings)

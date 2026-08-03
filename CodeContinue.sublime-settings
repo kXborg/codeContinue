@@ -21,5 +21,12 @@
     "trigger_language": ["python", "cpp", "javascript"],
 
     // Enable debug logging to console (View > Show Console)
-    "debug": false
+    "debug": false,
+
+    // System prompt sent to the model for inline completions.
+    // Leave empty ("") to use the built-in default.
+    // Useful for tuning smaller models or suppressing docstrings/comments.
+    // The placeholder {CURSOR_HERE} is described in the default prompt; you can
+    // reference it in your custom prompt as well.
+    "system_prompt": ""
 }
