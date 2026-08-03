@@ -182,8 +182,10 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 response_start_time = time.time()
                 with urllib.request.urlopen(req, timeout=timeout_ms) as response:
                     response_received_time = time.time()
-                    result = json.loads(response.read().decode())
-                    _log("Received Response : {}".format(result))
+                    raw_body = response.read().decode()
+                    _log("Raw response body: {0}".format(raw_body[:2000]))
+                    result = json.loads(raw_body)
+                    _log("Parsed response: {}".format(result))
                     completion = provider.parse_response(result)
                     parse_complete_time = time.time()
 
@@ -207,6 +209,10 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
             except (ValueError, KeyError) as e:
                 elapsed = time.time() - request_start_time
                 _log_error("Parse error after {0:.2f}s: {1}".format(elapsed, str(e)[:200]))
+                try:
+                    _log_error("Raw body that failed to parse: {0}".format(raw_body[:2000]))
+                except NameError:
+                    pass  # raw_body not set; error occurred before read()
                 if state.pending_request_id == request_id:
                     msg = "CodeContinue: Parse error - {0}".format(str(e)[:50])
                     sublime.set_timeout(lambda: sublime.status_message(msg), 0)
