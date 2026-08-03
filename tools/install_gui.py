@@ -207,26 +207,32 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
         except Exception as e:
             log_callback(f"ERROR: Failed to copy {file_name}: {e}\n")
             return False
-    
-    if user_config:
-        settings_dst = os.path.join(package_dest, "CodeContinue.sublime-settings")
+
+    # Handle settings: always copy defaults to package dir, write user config to User/ dir
+    # (Standard Sublime Text pattern: package dir = defaults, User/ dir = overrides)
+    src = os.path.join(script_dir, "CodeContinue.sublime-settings")
+    dst = os.path.join(package_dest, "CodeContinue.sublime-settings")
+    if os.path.exists(src):
         try:
-            with open(settings_dst, 'w') as f:
-                json.dump(user_config, f, indent=4)
+            shutil.copy2(src, dst)
+            log_callback(f"✓ Copied: CodeContinue.sublime-settings\n")
+        except Exception as e:
+            log_callback(f"ERROR: Failed to copy settings: {e}\n")
+            return False
+
+    if user_config:
+        user_dir = os.path.join(os.path.dirname(package_dest), "User")
+        os.makedirs(user_dir, exist_ok=True)
+        user_settings_dst = os.path.join(user_dir, "CodeContinue.sublime-settings")
+        config_json = json.dumps(user_config, indent=4)
+        header = "// CodeContinue user settings\n// Override any defaults from the package settings here.\n"
+        try:
+            with open(user_settings_dst, 'w') as f:
+                f.write(header + config_json + "\n")
             log_callback(f"✓ Created settings with your configuration\n")
         except Exception as e:
-            log_callback(f"ERROR: Failed to write settings: {e}\n")
+            log_callback(f"ERROR: Failed to write user settings: {e}\n")
             return False
-    else:
-        src = os.path.join(script_dir, "CodeContinue.sublime-settings")
-        dst = os.path.join(package_dest, "CodeContinue.sublime-settings")
-        if os.path.exists(src):
-            try:
-                shutil.copy2(src, dst)
-                log_callback(f"✓ Copied: CodeContinue.sublime-settings\n")
-            except Exception as e:
-                log_callback(f"ERROR: Failed to copy settings: {e}\n")
-                return False
     
     for dir_name in dirs_to_copy:
         src = os.path.join(script_dir, dir_name)

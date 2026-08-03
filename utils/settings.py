@@ -187,27 +187,62 @@ def _on_setup_cancel_api_key():
 
 
 def on_api_key_entered(api_key):
-    """Final setup step: save API key (endpoint and model are already persisted)."""
+    """Prompt for optional system prompt after API key is captured."""
     global _setup_endpoint, _setup_model
 
     settings = sublime.load_settings("CodeContinue.sublime-settings")
     settings.set("api_key", api_key.strip() if api_key else "")
     _save_settings()
 
-    # Read back for the confirmation dialog (values were saved incrementally).
+    window = sublime.active_window()
+    if not window:
+        _finish_setup(settings)
+        return
+
+    current_prompt = settings.get("system_prompt", "")
+
+    window.show_input_panel(
+        "CodeContinue Setup: Custom system prompt (optional, leave blank for default)",
+        current_prompt,
+        on_system_prompt_entered,
+        None,
+        _on_setup_cancel_system_prompt,
+    )
+
+
+def _on_setup_cancel_system_prompt():
+    """Escape on system prompt panel — all earlier values already saved."""
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    sublime.status_message("CodeContinue: Setup cancelled. Previous settings were saved.")
+    _log("Setup: system prompt panel cancelled; earlier settings preserved")
+    _finish_setup(settings)
+
+
+def on_system_prompt_entered(prompt_text):
+    """Final setup step: save system prompt."""
+    global _setup_endpoint, _setup_model
+
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    settings.set("system_prompt", prompt_text.strip())
+    _save_settings()
+    _log("Setup: system prompt saved")
+    _finish_setup(settings)
+
+
+def _finish_setup(settings):
+    """Show the completion dialog and clear setup globals."""
+    global _setup_endpoint, _setup_model
+
     endpoint = settings.get("endpoint", "")
     model = settings.get("model", "")
 
-    _log("CodeContinue: Configuration saved. Endpoint: {0}, Model: {1}, API key set: {2}".format(
-        endpoint, model, bool(api_key.strip()) if api_key else False
-    ))
+    _log("CodeContinue: Configuration saved. Endpoint: {0}, Model: {1}".format(endpoint, model))
     sublime.message_dialog(
         "CodeContinue configured successfully!\n\nEndpoint: {0}\nModel: {1}\n\nPress Ctrl+Enter to get a code suggestion.".format(
             endpoint, model
         )
     )
 
-    # Clear globals now that setup is complete.
     _setup_endpoint = None
     _setup_model = None
 
@@ -250,8 +285,27 @@ class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
                         def on_api_key_done(api_key_text):
                             settings.set("api_key", api_key_text.strip() if api_key_text.strip() else "")
                             _save_settings()
-                            sublime.status_message("CodeContinue: Configuration saved!")
-                            _log("Configuration updated via Command Palette")
+                            _log("Configure: API key saved incrementally")
+
+                            current_prompt = settings.get("system_prompt", "")
+
+                            def on_prompt_done(prompt_text):
+                                settings.set("system_prompt", prompt_text.strip())
+                                _save_settings()
+                                sublime.status_message("CodeContinue: Configuration saved!")
+                                _log("Configuration updated via Command Palette")
+
+                            def on_prompt_cancel():
+                                sublime.status_message("CodeContinue: System prompt unchanged. All other settings were saved.")
+                                _log("Configure: system prompt panel cancelled; earlier settings preserved")
+
+                            window.show_input_panel(
+                                "CodeContinue - System prompt (optional, blank = built-in default):",
+                                current_prompt,
+                                on_prompt_done,
+                                None,
+                                on_prompt_cancel,
+                            )
 
                         def on_api_key_cancel():
                             sublime.status_message("CodeContinue: API key unchanged. Endpoint and model were saved.")
