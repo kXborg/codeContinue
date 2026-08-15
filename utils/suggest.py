@@ -70,6 +70,40 @@ def _drop_state(vid):
     _states.pop(vid, None)
 
 
+LANGUAGE_ALIASES = {
+    "cpp": {"cpp", "c++", "c"},
+    "c++": {"cpp", "c++", "c"},
+    "javascript": {"javascript", "js"},
+    "js": {"javascript", "js"},
+    "typescript": {"typescript", "ts"},
+    "ts": {"typescript", "ts"},
+    "python": {"python", "py"},
+    "py": {"python", "py"},
+}
+
+
+def is_syntax_supported(syntax, trigger_langs):
+    """Check if the given sublime.Syntax matches configured trigger_langs."""
+    if not syntax or not trigger_langs:
+        return False
+
+    trigger_set = {str(l).strip().lower() for l in trigger_langs}
+    if "*" in trigger_set or "all" in trigger_set:
+        return True
+
+    syntax_name = getattr(syntax, "name", "").lower()
+    syntax_scope = getattr(syntax, "scope", "").lower()
+
+    for lang in trigger_set:
+        if lang in syntax_name or lang in syntax_scope:
+            return True
+        aliases = LANGUAGE_ALIASES.get(lang, set())
+        if any(alias in syntax_name or alias in syntax_scope for alias in aliases):
+            return True
+
+    return False
+
+
 class CodeContinueListener(sublime_plugin.EventListener):
     def on_modified(self, view):
         # Clear any phantom suggestion when the user modifies text
@@ -88,9 +122,7 @@ class CodeContinueListener(sublime_plugin.EventListener):
         """Trigger suggestion when the user inserts a newline (presses Enter)."""
         settings = sublime.load_settings("CodeContinue.sublime-settings")
         trigger_langs = settings.get("trigger_language", [])
-        if not view.syntax():
-            return
-        if view.syntax().name.lower() not in [lang.lower() for lang in trigger_langs]:
+        if not is_syntax_supported(view.syntax(), trigger_langs):
             return
 
         if command_name == "insert" and args and args.get("characters") == "\n":
