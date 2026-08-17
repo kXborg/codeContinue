@@ -14,6 +14,31 @@ import subprocess
 from pathlib import Path
 
 
+# Add parent directory to sys.path so utils can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+try:
+    from utils.api import normalize_endpoint, fetch_models, test_endpoint_connectivity
+except ImportError:
+    def normalize_endpoint(url):
+        url = url.strip().rstrip("/")
+        if not url:
+            return ""
+        if url.endswith(("/chat/completions", "/messages", "/generate", "/api/chat")):
+            return url
+        if "anthropic.com" in url:
+            return f"{url}/v1/messages" if not url.endswith("/v1") else f"{url}/messages"
+        if url.endswith("/v1"):
+            return f"{url}/chat/completions"
+        return f"{url}/v1/chat/completions"
+
+    def fetch_models(endpoint, api_key="", timeout_s=3.0):
+        return []
+
+    def test_endpoint_connectivity(endpoint, api_key="", timeout_s=3.0):
+        return True, "OK"
+
+
 def configure_settings():
     """Interactive configuration for endpoint and credentials."""
     print("=" * 60)
@@ -24,20 +49,52 @@ def configure_settings():
     print()
     
     # Get endpoint
-    endpoint = input("API Endpoint URL (e.g., https://your-api.com/v1/chat/completions): ").strip()
-    if not endpoint:
-        print("⚠ Warning: No endpoint provided. Using default placeholder.")
-        endpoint = "https://your-api-endpoint.com/v1/chat/completions"
-    
-    # Get model
-    model = input("Model name (e.g., Qwen/Qwen2.5-Coder-1.5B-Instruct): ").strip()
-    if not model:
-        print("⚠ Warning: No model provided. Using default placeholder.")
-        model = "default-model"
+    raw_endpoint = input("API Endpoint URL (e.g., http://localhost:1234 or full URL): ").strip()
+    if not raw_endpoint:
+        endpoint = "http://localhost:1234/v1/chat/completions"
+        print(f"ℹ Using default endpoint: {endpoint}")
+    else:
+        endpoint = normalize_endpoint(raw_endpoint)
+        if endpoint != raw_endpoint:
+            print(f"ℹ Normalized endpoint: {endpoint}")
     
     # Optional: API key
     print()
     api_key = input("API Key (optional, press Enter to skip): ").strip()
+
+    # Pretest endpoint connectivity and fetch available models
+    print()
+    print("Testing connection and detecting available models...")
+    is_ok, msg = test_endpoint_connectivity(endpoint, api_key)
+    if not is_ok:
+        print(f"⚠ Warning: {msg}")
+    else:
+        print(f"✓ Connection successful ({msg})")
+
+    models = fetch_models(endpoint, api_key) if is_ok else []
+    model = ""
+
+    if models:
+        print()
+        print(f"✓ Found {len(models)} model(s) available on server:")
+        for idx, m in enumerate(models, 1):
+            print(f"  {idx}. {m}")
+        print(f"  {len(models) + 1}. Enter model name manually")
+        print()
+        choice = input(f"Select model [1-{len(models) + 1}, default: 1]: ").strip()
+        try:
+            choice_idx = int(choice) if choice else 1
+            if 1 <= choice_idx <= len(models):
+                model = models[choice_idx - 1]
+                print(f"✓ Selected model: {model}")
+        except ValueError:
+            pass
+
+    if not model:
+        default_model = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
+        print()
+        model_input = input(f"Model name [default: {default_model}]: ").strip()
+        model = model_input if model_input else default_model
     
     # Max context lines
     print()

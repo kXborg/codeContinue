@@ -1,8 +1,10 @@
 """Settings discovery, first-run setup, and the Configure command."""
 
+import threading
 import sublime
 import sublime_plugin
 
+from .api import normalize_endpoint, fetch_models, test_endpoint_connectivity
 from .log import _log
 
 
@@ -27,27 +29,80 @@ def _save_settings():
     sublime.save_settings("CodeContinue.sublime-settings")
 
 
+def _prompt_for_model(window, settings, default_model, on_done, on_cancel):
+    """Fetch available models in background and prompt via quick panel or input panel."""
+    endpoint = settings.get("endpoint", "")
+    api_key = settings.get("api_key", "")
+
+    sublime.status_message("CodeContinue: Detecting available models...")
+
+    def fetch_worker():
+        is_ok, msg = test_endpoint_connectivity(endpoint, api_key)
+        models = fetch_models(endpoint, api_key) if is_ok else []
+
+        def show_ui():
+            if not window:
+                return
+
+            if not is_ok:
+                sublime.status_message("CodeContinue: ⚠ {0}".format(msg))
+                _log("Endpoint connectivity: {0}".format(msg))
+            else:
+                _log("Endpoint connectivity: OK ({0} models found)".format(len(models)))
+
+            if models:
+                options = list(models)
+                options.append("✎ Enter model name manually...")
+
+                def on_quick_select(idx):
+                    if idx < 0:
+                        on_cancel()
+                    elif idx < len(models):
+                        on_done(models[idx])
+                    else:
+                        window.show_input_panel(
+                            "CodeContinue - Enter Model Name:",
+                            default_model,
+                            on_done,
+                            None,
+                            on_cancel,
+                        )
+
+                window.show_quick_panel(options, on_quick_select)
+            else:
+                window.show_input_panel(
+                    "CodeContinue - Enter Model Name:",
+                    default_model,
+                    on_done,
+                    None,
+                    on_cancel,
+                )
+
+        sublime.set_timeout(show_ui, 0)
+
+    threading.Thread(target=fetch_worker, daemon=True).start()
+
+
 def show_endpoint_config_panel(view):
     """Show input panel chain to configure endpoint + model on demand.
 
     Saves incrementally: each value is persisted as soon as it is captured,
     so pressing Escape on a later panel preserves earlier entries.
     """
-    # Capture a stable window reference (the view's window can be None by the
-    # time the chained callback fires).
     window = (view.window() if view else None) or sublime.active_window()
     if not window:
         sublime.status_message("CodeContinue: No active window for configuration.")
         return
 
     settings = sublime.load_settings("CodeContinue.sublime-settings")
-    current_endpoint = settings.get("endpoint", "https://your-api.com/v1/chat/completions")
+    current_endpoint = settings.get("endpoint", "http://localhost:1234")
 
     def on_endpoint_done(endpoint_text):
-        if endpoint_text.strip():
-            settings.set("endpoint", endpoint_text.strip())
+        norm_endpoint = normalize_endpoint(endpoint_text)
+        if norm_endpoint:
+            settings.set("endpoint", norm_endpoint)
             _save_settings()
-            _log("Configuration: endpoint saved")
+            _log("Configuration: endpoint saved ({0})".format(norm_endpoint))
 
             current_model = settings.get("model", "gpt-3.5-turbo")
 
@@ -62,13 +117,7 @@ def show_endpoint_config_panel(view):
                 sublime.status_message("CodeContinue: Setup cancelled. Endpoint was saved.")
                 _log("Configuration: model panel cancelled; endpoint preserved")
 
-            window.show_input_panel(
-                "CodeContinue - Model name:",
-                current_model,
-                on_model_done,
-                None,
-                on_model_cancel,
-            )
+            _prompt_for_model(window, settings, current_model, on_model_done, on_model_cancel)
         else:
             sublime.status_message("CodeContinue: Endpoint not configured. Run 'CodeContinue: Configure' to set it up.")
 
@@ -77,7 +126,7 @@ def show_endpoint_config_panel(view):
         _log("Configuration: endpoint panel cancelled")
 
     window.show_input_panel(
-        "CodeContinue - API Endpoint URL:",
+        "CodeContinue - API Endpoint (e.g. http://localhost:1234):",
         current_endpoint,
         on_endpoint_done,
         None,
@@ -104,7 +153,6 @@ def show_setup_dialog():
     whatever has been entered so far.
     """
     global _setup_endpoint, _setup_model
-    # Clear stale state from any previous aborted wizard run.
     _setup_endpoint = None
     _setup_model = None
 
@@ -113,7 +161,7 @@ def show_setup_dialog():
         return
 
     window.show_input_panel(
-        "CodeContinue Setup: Enter your v1 API endpoint",
+        "CodeContinue Setup: API Endpoint URL (e.g. http://localhost:1234 or full URL):",
         "https://api.openai.com/v1/chat/completions",
         on_endpoint_entered,
         None,
@@ -129,25 +177,19 @@ def _on_setup_cancel_endpoint():
 
 def on_endpoint_entered(endpoint):
     global _setup_endpoint
-    _setup_endpoint = endpoint
+    norm_endpoint = normalize_endpoint(endpoint)
+    _setup_endpoint = norm_endpoint
 
-    # Save immediately so the value survives an Escape on a later panel.
     settings = sublime.load_settings("CodeContinue.sublime-settings")
-    settings.set("endpoint", endpoint)
+    settings.set("endpoint", norm_endpoint)
     _save_settings()
-    _log("Setup: endpoint saved incrementally")
+    _log("Setup: endpoint saved incrementally ({0})".format(norm_endpoint))
 
     window = sublime.active_window()
     if not window:
         return
 
-    window.show_input_panel(
-        "CodeContinue Setup: Enter your model name",
-        "gpt-3.5-turbo",
-        on_model_entered,
-        None,
-        _on_setup_cancel_model,
-    )
+    _prompt_for_model(window, settings, "gpt-3.5-turbo", on_model_entered, _on_setup_cancel_model)
 
 
 def _on_setup_cancel_model():
@@ -161,7 +203,6 @@ def on_model_entered(model):
     global _setup_model
     _setup_model = model
 
-    # Save immediately.
     settings = sublime.load_settings("CodeContinue.sublime-settings")
     settings.set("model", model)
     _save_settings()
@@ -172,7 +213,7 @@ def on_model_entered(model):
         return
 
     window.show_input_panel(
-        "CodeContinue Setup: API key (optional, leave blank to skip)",
+        "CodeContinue Setup: API key (optional, leave blank to skip):",
         "",
         on_api_key_entered,
         None,
@@ -202,7 +243,7 @@ def on_api_key_entered(api_key):
     current_prompt = settings.get("system_prompt", "")
 
     window.show_input_panel(
-        "CodeContinue Setup: Custom system prompt (optional, leave blank for default)",
+        "CodeContinue Setup: Custom system prompt (optional, leave blank for default):",
         current_prompt,
         on_system_prompt_entered,
         None,
@@ -238,7 +279,7 @@ def _finish_setup(settings):
 
     _log("CodeContinue: Configuration saved. Endpoint: {0}, Model: {1}".format(endpoint, model))
     sublime.message_dialog(
-        "CodeContinue configured successfully!\n\nEndpoint: {0}\nModel: {1}\n\nPress Ctrl+Enter to get a code suggestion.".format(
+        "CodeContinue configured successfully!\n\nEndpoint: {0}\nModel: {1}\n\nPress Tab to accept suggestions once keybindings are configured.".format(
             endpoint, model
         )
     )
@@ -254,23 +295,20 @@ class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
     it, so pressing Escape on a later panel preserves earlier changes.
     """
     def run(self, edit):
-        # self.view.window() can return None inside the chained callbacks (e.g.
-        # when the command was invoked from the command palette), so fall back
-        # to active_window and capture once.
         window = self.view.window() or sublime.active_window()
         if not window:
             sublime.error_dialog("CodeContinue: No active window to configure in.")
             return
 
         settings = sublime.load_settings("CodeContinue.sublime-settings")
-
-        current_endpoint = settings.get("endpoint", "https://your-api.com/v1/chat/completions")
+        current_endpoint = settings.get("endpoint", "http://localhost:1234")
 
         def on_endpoint_done(endpoint_text):
-            if endpoint_text.strip():
-                settings.set("endpoint", endpoint_text.strip())
+            norm_endpoint = normalize_endpoint(endpoint_text)
+            if norm_endpoint:
+                settings.set("endpoint", norm_endpoint)
                 _save_settings()
-                _log("Configure: endpoint saved incrementally")
+                _log("Configure: endpoint saved incrementally ({0})".format(norm_endpoint))
 
                 current_model = settings.get("model", "gpt-3.5-turbo")
 
@@ -323,22 +361,17 @@ class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
                     sublime.status_message("CodeContinue: Model unchanged. Endpoint was saved.")
                     _log("Configure: model panel cancelled; endpoint preserved")
 
-                window.show_input_panel(
-                    "CodeContinue - Model name:",
-                    current_model,
-                    on_model_done,
-                    None,
-                    on_model_cancel,
-                )
+                _prompt_for_model(window, settings, current_model, on_model_done, on_model_cancel)
 
         def on_endpoint_cancel():
             sublime.status_message("CodeContinue: Configuration cancelled.")
             _log("Configure: endpoint panel cancelled")
 
         window.show_input_panel(
-            "CodeContinue - API Endpoint URL:",
+            "CodeContinue - API Endpoint URL (e.g. http://localhost:1234 or full URL):",
             current_endpoint,
             on_endpoint_done,
             None,
             on_endpoint_cancel,
         )
+

@@ -1,0 +1,26 @@
+CodeContinue v2.4.0
+===================
+
+New Features:
+• Dynamic Endpoint Normalization: Base URLs like http://localhost:1234 or
+  https://api.openai.com are automatically completed with the correct API path
+  (/v1/chat/completions or /v1/messages).
+• Automatic Model Discovery: Setup wizards now query /v1/models (or /api/tags)
+  and present a quick-pick list of available models automatically.
+• Endpoint Pre-flight Check: Instant connection verification during configuration
+  with clear diagnostic messages if your local server is offline.
+• Inline Edit & Refactor: Rewrite code in-place with instructions via right-click
+  >> "CodeContinue: Edit Selection" (or Ctrl+Shift+P).
+• Native Anthropic Support: Full compatibility with Anthropic /v1/messages endpoints.
+
+Chat Improvements:
+• Instant curated greeting on chat open without unsolicited analysis dumps.
+• Clear guidance on using "CodeContinue: Edit Selection" for in-place modifications.
+• Polished chat UI with distinct user/assistant headings and blockquote cues.
+
+Installers:
+• Both CLI (install.py) and GUI (install_gui.py) installers now feature automatic
+  endpoint normalization, connection tests, and interactive model pickers.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

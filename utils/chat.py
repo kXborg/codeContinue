@@ -10,6 +10,7 @@ import sublime_plugin
 
 from .api import get_provider
 from .log import _log
+from .text_utils import describe_code_selection
 
 
 class ChatState:
@@ -28,11 +29,12 @@ class ChatState:
         "headers",
         "code",
         "lang",
+        "file_name",
         "requesting",
         "provider",
     )
 
-    def __init__(self, history, endpoint, model, timeout_s, headers, code, lang, provider):
+    def __init__(self, history, endpoint, model, timeout_s, headers, code, lang, file_name, provider):
         self.history = history
         self.endpoint = endpoint
         self.model = model
@@ -40,6 +42,7 @@ class ChatState:
         self.headers = headers
         self.code = code
         self.lang = lang
+        self.file_name = file_name
         self.requesting = False  # True while an API call is in-flight
         self.provider = provider
 
@@ -52,16 +55,21 @@ _original_layouts = {}
 
 CHAT_SYSTEM_PROMPT = (
     "You are a code discussion assistant running in a read-only chat panel in Sublime Text. "
-    "The user has selected a piece of code and wants to discuss it. "
-    "Provide clear, concise explanations and suggestions. "
-    "You cannot directly modify files, buffers, or the user's selection. "
-    "When proposing changes, provide the complete modified code in markdown code blocks "
-    "for the user to copy manually, or remind them to use the 'CodeContinue: Edit Selection' command. "
-    "Never claim that you applied changes or modified their files. "
-    "When showing code, use markdown formatting. Be direct and practical."
+    "The user has selected a piece of code and wants to discuss it.\n\n"
+    "Guidelines:\n"
+    "- Provide clear, concise explanations and practical suggestions.\n"
+    "- You cannot directly modify files, buffers, or the user's selection from this chat window.\n"
+    "- If the user asks whether you can edit code, or asks you to edit/rewrite/modify the code:\n"
+    "  1. Clearly state that this chat panel is read-only and cannot edit their buffer directly.\n"
+    "  2. Proactively explain how to edit in-place: 'Select your code >> right-click >> choose **CodeContinue: Edit Selection** (or press Ctrl+Shift+P >> CodeContinue: Edit Selection) and enter your instruction in the input field at the bottom.'\n"
+    "  3. If they asked for a specific code change, provide the complete rewritten code in a markdown code block so they can copy/paste it.\n"
+    "  4. Do NOT ask them to provide the code again; the selected code is already in the context.\n"
+    "- Never claim that you applied changes or modified their files.\n"
+    "- When showing code, use markdown formatting with language tags.\n"
+    "- Be direct, practical, and concise."
 )
 
-INPUT_SEPARATOR = "\n── Type below and press Enter to send (close tab to end) ──\n"
+INPUT_SEPARATOR = "\n---\n\n### 👤 You *(press Enter to send)*\n\n> "
 
 
 def _chat_view_append(chat_view, text):
@@ -81,7 +89,10 @@ def _chat_get_user_input(chat_view):
     if sep_pos == -1:
         return ""
     input_start = sep_pos + len(INPUT_SEPARATOR)
-    return content[input_start:].strip()
+    text = content[input_start:].strip()
+    if text.startswith(">"):
+        text = text[1:].strip()
+    return text
 
 
 def _chat_show_input_area(chat_view):
@@ -102,14 +113,14 @@ def _chat_lock_and_format_input(chat_view, user_text):
     chat_view.set_read_only(False)
     chat_view.run_command("select_all")
     chat_view.run_command("left_delete")
-    chat_view.run_command("append", {"characters": before + "\n\n### You\n\n" + user_text + "\n"})
+    chat_view.run_command("append", {"characters": before + "\n\n---\n\n### 👤 You\n\n" + user_text + "\n"})
     chat_view.set_read_only(True)
 
 
 def _chat_remove_thinking(chat_view):
     """Remove the Thinking indicator from the chat view."""
     content = chat_view.substr(sublime.Region(0, chat_view.size()))
-    marker = "\n⏳ *Thinking...*\n"
+    marker = "\n---\n\n⏳ *Thinking...*\n"
     pos = content.rfind(marker)
     if pos >= 0:
         cleaned = content[:pos] + content[pos + len(marker):]
@@ -118,6 +129,16 @@ def _chat_remove_thinking(chat_view):
         chat_view.run_command("left_delete")
         chat_view.run_command("append", {"characters": cleaned})
         chat_view.set_read_only(True)
+    else:
+        marker_short = "\n⏳ *Thinking...*\n"
+        pos = content.rfind(marker_short)
+        if pos >= 0:
+            cleaned = content[:pos] + content[pos + len(marker_short):]
+            chat_view.set_read_only(False)
+            chat_view.run_command("select_all")
+            chat_view.run_command("left_delete")
+            chat_view.run_command("append", {"characters": cleaned})
+            chat_view.set_read_only(True)
 
 
 def _chat_do_api_call(chat_view, state):
@@ -151,7 +172,7 @@ def _chat_do_api_call(chat_view, state):
                         if cvid not in _states:
                             return
                         _chat_remove_thinking(chat_view)
-                        _chat_view_append(chat_view, "\n---\n\n### CodeContinue\n\n" + reply + "\n")
+                        _chat_view_append(chat_view, "\n---\n\n### 🤖 CodeContinue\n\n" + reply + "\n")
                         _chat_show_input_area(chat_view)
                         state.requesting = False
 
@@ -205,7 +226,18 @@ def _chat_send_message(chat_view):
 
     state.requesting = True
     _chat_lock_and_format_input(chat_view, user_text)
-    state.history.append({"role": "user", "content": user_text})
+
+    # First user message includes selected code context
+    if len(state.history) <= 1:
+        content = (
+            "Here is the selected code from `{0}` ({1}):\n\n"
+            "```{1}\n{2}\n```\n\n"
+            "{3}"
+        ).format(state.file_name, state.lang, state.code, user_text)
+    else:
+        content = user_text
+
+    state.history.append({"role": "user", "content": content})
     _chat_view_append(chat_view, "\n---\n\n⏳ *Thinking...*\n")
     _chat_do_api_call(chat_view, state)
 
@@ -292,19 +324,12 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
 
         cvid = chat_view.id()
 
-        initial_msg = (
-            "Here is the selected code from `{0}` ({1}):\n\n"
-            "```\n{2}\n```\n\n"
-            "I'd like to discuss this code."
-        ).format(base_name, lang, selected_text)
-
         endpoint = settings.get("endpoint", "")
         provider = get_provider(endpoint, settings)
         
         state = ChatState(
             history=[
                 {"role": "system", "content": CHAT_SYSTEM_PROMPT},
-                {"role": "user", "content": initial_msg},
             ],
             endpoint=endpoint,
             model=settings.get("model", ""),
@@ -312,9 +337,13 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
             headers=provider.build_headers(settings),
             code=selected_text,
             lang=lang,
+            file_name=base_name,
             provider=provider,
         )
         _states[cvid] = state
+
+        description = describe_code_selection(selected_text, lang)
+        greeting = "Hi, I see you have selected {0}; how can I help?".format(description)
 
         header = (
             "## CodeContinue Chat\n"
@@ -323,15 +352,15 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
             "### Selected Code\n"
             "```{1}\n"
             "{2}\n"
-            "```\n"
-        ).format(base_name, lang, selected_text)
+            "```\n\n"
+            "---\n\n"
+            "### 🤖 CodeContinue\n\n"
+            "{3}\n"
+        ).format(base_name, lang, selected_text, greeting)
 
         chat_view.run_command("append", {"characters": header})
         chat_view.set_read_only(True)
-
-        _chat_view_append(chat_view, "\n---\n\n⏳ *Thinking...*\n")
-        state.requesting = True
-        _chat_do_api_call(chat_view, state)
+        _chat_show_input_area(chat_view)
 
     def is_enabled(self):
         """Only enable when there is a non-empty selection."""
@@ -339,3 +368,4 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
             if not region.empty():
                 return True
         return False
+

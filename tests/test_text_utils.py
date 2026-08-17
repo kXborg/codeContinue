@@ -7,7 +7,11 @@ import os
 # Allow importing from the package root without installing.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from utils.text_utils import clean_markdown_fences, strip_common_indent
+from utils.text_utils import (
+    clean_markdown_fences,
+    describe_code_selection,
+    strip_common_indent,
+)
 
 
 class TestCleanMarkdownFences(unittest.TestCase):
@@ -172,5 +176,60 @@ class TestStripCommonIndent(unittest.TestCase):
         self.assertEqual(prefix, "")
 
 
+class TestDescribeCodeSelection(unittest.TestCase):
+    """describe_code_selection should identify functions, classes, or line counts."""
+
+    def test_python_function(self):
+        code = "def write_text_to_file(filename, content):\n    with open(filename, 'a') as f:\n        pass"
+        self.assertEqual(describe_code_selection(code), "`write_text_to_file()`")
+
+    def test_python_async_function(self):
+        code = "async def fetch_data(url: str):\n    return await http.get(url)"
+        self.assertEqual(describe_code_selection(code), "`fetch_data()`")
+
+    def test_python_function_with_decorator(self):
+        code = "@app.route('/api')\n@auth_required\ndef handle_api():\n    return {'status': 'ok'}"
+        self.assertEqual(describe_code_selection(code), "`handle_api()`")
+
+    def test_python_class(self):
+        code = "class DatabaseConnection(BaseHandler):\n    def __init__(self):\n        pass"
+        self.assertEqual(describe_code_selection(code), "`DatabaseConnection`")
+
+    def test_javascript_function(self):
+        code = "function calculateTotal(items) {\n    return items.reduce((a, b) => a + b, 0);\n}"
+        self.assertEqual(describe_code_selection(code), "`calculateTotal()`")
+
+    def test_javascript_arrow_function(self):
+        code = "const renderItem = async (item) => {\n    return `<div>${item}</div>`;\n}"
+        self.assertEqual(describe_code_selection(code), "`renderItem()`")
+
+    def test_rust_function(self):
+        code = "pub async fn process_queue(&mut self) -> Result<()> {\n    Ok(())\n}"
+        self.assertEqual(describe_code_selection(code), "`process_queue()`")
+
+    def test_rust_struct(self):
+        code = "pub struct ConnectionPool {\n    size: usize,\n}"
+        self.assertEqual(describe_code_selection(code), "`ConnectionPool`")
+
+    def test_go_function(self):
+        code = "func ServeHTTP(w http.ResponseWriter, r *http.Request) {\n    w.WriteHeader(200)\n}"
+        self.assertEqual(describe_code_selection(code), "`ServeHTTP()`")
+
+    def test_single_line_fallback(self):
+        code = "x = 42"
+        self.assertEqual(describe_code_selection(code), "1 line of code")
+
+    def test_multi_line_fallback(self):
+        code = "x = 1\ny = 2\nz = x + y"
+        self.assertEqual(describe_code_selection(code), "3 lines of code")
+
+    def test_empty_string(self):
+        self.assertEqual(describe_code_selection(""), "selected code")
+
+    def test_whitespace_string(self):
+        self.assertEqual(describe_code_selection("   \n\t  "), "selected code")
+
+
 if __name__ == "__main__":
     unittest.main()
+

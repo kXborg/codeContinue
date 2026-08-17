@@ -62,3 +62,59 @@ def strip_common_indent(lines):
     min_indent = min(len(x) for x in indents)
     common_prefix = indents[0][:min_indent]
     return [ln[min_indent:] if len(ln) >= min_indent else ln for ln in lines], common_prefix
+
+
+_FUNC_PATTERNS = [
+    # Python def / async def
+    re.compile(r"^\s*(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    # JS/TS function
+    re.compile(r"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s*\*?\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    # JS/TS const/let/var name = ...
+    re.compile(r"^\s*(?:export\s+)?(?:const|let|var)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[a-zA-Z_][a-zA-Z0-9_]*)\s*=>"),
+    # Rust fn
+    re.compile(r"^\s*(?:pub(?:\([^)]+\))?\s+)?(?:async\s+)?(?:unsafe\s+)?fn\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    # Go func
+    re.compile(r"^\s*func\s+(?:\([^)]+\)\s+)?([a-zA-Z_][a-zA-Z0-9_]*)"),
+    # C / C++ / Java / C#
+    re.compile(r"^\s*(?:public|private|protected|static|final|native|virtual|override|inline|constexpr\s+)*(?:[a-zA-Z_][a-zA-Z0-9_<>,\[\]\s*&]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)\s*(?:throws\s+[a-zA-Z0-9_,\s]+)?\s*\{?"),
+]
+
+_CLASS_PATTERNS = [
+    re.compile(r"^\s*(?:export\s+)?(?:default\s+)?(?:abstract\s+)?(?:public|private|protected\s+)?class\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    re.compile(r"^\s*(?:pub(?:\([^)]+\))?\s+)?struct\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    re.compile(r"^\s*(?:export\s+)?interface\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    re.compile(r"^\s*(?:pub(?:\([^)]+\))?\s+)?enum\s+([a-zA-Z_][a-zA-Z0-9_]*)"),
+    re.compile(r"^\s*type\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+(?:struct|interface)"),
+]
+
+
+def describe_code_selection(code, lang=""):
+    """Return a short human-readable description of selected code.
+
+    Examples:
+    - '`write_text_to_file()`'
+    - '`User`'
+    - '12 lines of code'
+    """
+    if not code or not code.strip():
+        return "selected code"
+
+    lines = [ln for ln in code.splitlines() if ln.strip()]
+    if not lines:
+        return "selected code"
+
+    for line in lines[:5]:
+        for pat in _CLASS_PATTERNS:
+            m = pat.match(line)
+            if m:
+                return "`{0}`".format(m.group(1))
+        for pat in _FUNC_PATTERNS:
+            m = pat.match(line)
+            if m:
+                return "`{0}()`".format(m.group(1))
+
+    n = len(lines)
+    if n == 1:
+        return "1 line of code"
+    return "{0} lines of code".format(n)
+

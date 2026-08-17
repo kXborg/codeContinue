@@ -21,6 +21,31 @@ except ImportError:
     sys.exit(1)
 
 
+# Add parent directory to sys.path so utils can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+try:
+    from utils.api import normalize_endpoint, fetch_models, test_endpoint_connectivity
+except ImportError:
+    def normalize_endpoint(url):
+        url = url.strip().rstrip("/")
+        if not url:
+            return ""
+        if url.endswith(("/chat/completions", "/messages", "/generate", "/api/chat")):
+            return url
+        if "anthropic.com" in url:
+            return f"{url}/v1/messages" if not url.endswith("/v1") else f"{url}/messages"
+        if url.endswith("/v1"):
+            return f"{url}/chat/completions"
+        return f"{url}/v1/chat/completions"
+
+    def fetch_models(endpoint, api_key="", timeout_s=3.0):
+        return []
+
+    def test_endpoint_connectivity(endpoint, api_key="", timeout_s=3.0):
+        return True, "OK"
+
+
 # Import detection functions from CLI installer
 def get_os_type():
     """Detect operating system."""
@@ -438,11 +463,15 @@ class InstallerGUI:
         # Endpoint
         ttk.Label(config_frame, text="API Endpoint URL:", font=self.label_font).grid(row=0, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.endpoint_var = tk.StringVar(value=self.default_settings["endpoint"])
-        ttk.Entry(config_frame, textvariable=self.endpoint_var, width=58, font=self.label_font).grid(row=0, column=1, pady=4)
+        endpoint_frame = ttk.Frame(config_frame)
+        endpoint_frame.grid(row=0, column=1, sticky=tk.W, pady=4)
+        ttk.Entry(endpoint_frame, textvariable=self.endpoint_var, width=44, font=self.label_font).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(endpoint_frame, text="Detect Models", command=self.detect_models_clicked).pack(side=tk.LEFT)
+
         # Example endpoint label
         ttk.Label(
             config_frame,
-            text='Example: "https://<provider>/v1/chat/completions"',
+            text='Example: "http://localhost:1234" or "https://api.openai.com/v1/chat/completions"',
             font=self.small_font,
             foreground="#888"
         ).grid(row=1, column=1, sticky=tk.W, padx=(0, 8))
@@ -450,7 +479,8 @@ class InstallerGUI:
         # Model
         ttk.Label(config_frame, text="Model Name:", font=self.label_font).grid(row=2, column=0, sticky=tk.W, pady=4, padx=(0, 8))
         self.model_var = tk.StringVar(value=self.default_settings["model"])
-        ttk.Entry(config_frame, textvariable=self.model_var, width=58, font=self.label_font).grid(row=2, column=1, pady=4)
+        self.model_combo = ttk.Combobox(config_frame, textvariable=self.model_var, width=55, font=self.label_font)
+        self.model_combo.grid(row=2, column=1, sticky=tk.W, pady=4)
         
         # API Key
         ttk.Label(config_frame, text="API Key (optional):", font=self.label_font).grid(row=3, column=0, sticky=tk.W, pady=4, padx=(0, 8))
@@ -562,6 +592,41 @@ class InstallerGUI:
                 "Sublime Text 4 was not found on your system.\nPlease install it first."
             )
     
+    def detect_models_clicked(self):
+        """Pretest connection and detect models from endpoint."""
+        raw_endpoint = self.endpoint_var.get().strip()
+        if not raw_endpoint:
+            messagebox.showwarning("Warning", "Please enter an API Endpoint first.")
+            return
+
+        norm_endpoint = normalize_endpoint(raw_endpoint)
+        self.endpoint_var.set(norm_endpoint)
+        api_key = self.api_key_var.get().strip()
+
+        self.log("\n" + "-"*50 + "\n")
+        self.log(f"Connecting to {norm_endpoint}...\n")
+
+        def worker():
+            is_ok, msg = test_endpoint_connectivity(norm_endpoint, api_key)
+            if not is_ok:
+                self.log(f"⚠ Connection warning: {msg}\n")
+            else:
+                self.log(f"✓ Connection successful ({msg})\n")
+
+            models = fetch_models(norm_endpoint, api_key) if is_ok else []
+            def update_ui():
+                if models:
+                    self.log(f"✓ Found {len(models)} model(s): {', '.join(models[:5])}\n")
+                    self.model_combo["values"] = models
+                    self.model_var.set(models[0])
+                else:
+                    self.log("ℹ No models auto-detected. You can type the model name manually.\n")
+                self.log("-"*50 + "\n\n")
+
+            self.root.after(0, update_ui)
+
+        threading.Thread(target=worker, daemon=True).start()
+
     def install(self):
         """Perform installation in a separate thread."""
         self.install_button.config(state=tk.DISABLED)
@@ -578,10 +643,11 @@ class InstallerGUI:
         try:
             # Build configuration
             languages = [lang.strip() for lang in self.languages_var.get().split(",")]
+            norm_endpoint = normalize_endpoint(self.endpoint_var.get().strip())
             
             config = {
-                "endpoint": self.endpoint_var.get(),
-                "model": self.model_var.get(),
+                "endpoint": norm_endpoint,
+                "model": self.model_var.get().strip(),
                 "max_context_lines": int(self.max_context_var.get()),
                 "timeout_ms": int(self.timeout_var.get()),
                 "trigger_language": languages,

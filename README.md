@@ -1,41 +1,46 @@
 # CodeContinue - AI Code Completion for Sublime Text
 ![LLM Powered IntellyCode Plugin for Sublime Text](videos/codeContinue-in-action.gif)
 
-An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions using OpenAI-compatible APIs. Check out [CodeContinue blog post here](https://www.orbital.net.in/blog/codecontinue-llm-powered-sublime-text-autocomplete).
+An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions, in-place code editing, and code chat using OpenAI-compatible or Anthropic APIs. Check out the [CodeContinue blog post here](https://www.orbital.net.in/blog/codecontinue-llm-powered-sublime-text-autocomplete).
 
 ## Features
 
-- Fast inline code completion powered by your choice of LLM
-- Simple keyboard shortcuts: Just `Enter` to suggest, `Tab` to accept (⚠️ Note: Keybindings are not enabled by default)
-- **Chat about code**: Select code >> right-click >> chat with your LLM for explanations, reviews, and suggestions
-- Context-aware suggestions based on surrounding code
-- Configurable for multiple languages (Python, C++, JavaScript, etc.)
-- Works with any OpenAI-compatible API endpoint
+- **Fast inline code completion**: Powered by your choice of local or cloud LLM.
+- **Inline Edit & Refactor**: Select code >> right-click >> **CodeContinue: Edit Selection** to rewrite code using natural language instructions.
+- **Chat about code**: Select code >> right-click >> **CodeContinue: Chat about Selection** to discuss code in an interactive split-view chat.
+- **Automatic Endpoint & Model Discovery**: Paste your server address (e.g. `http://localhost:1234` or `https://api.openai.com`); CodeContinue automatically normalizes the URL and detects available models from `/v1/models`.
+- **Flexible Keyboard Shortcuts**: `Enter` to suggest, `Tab` to accept (⚠️ Note: Keybindings are customizable and enabled via settings).
+- **Multi-Provider Support**: Works out-of-the-box with OpenAI, Anthropic, LM Studio, Ollama, vLLM, and local OpenAI-compatible servers.
+- **Context-aware**: Uses surrounding code context to produce accurate suggestions.
 
 ## Installation
 
-### Option 1: Install via Package Control (Live Now)
+### Option 1: Install via Package Control (Recommended)
 
-We provide cross-platform installers for Windows, macOS, and Linux.
-
-1. Install package control
-   - Open command pallete via `Ctrl + Shift + P` or `Cmd + Shift + P` on Mac
-   - Type "Install Package Control"
-   - Select the context menue
-2. Install the Package
-   - Open command pallete and search for codeContinue
-   - Press Enter to install
-3. Configure codeContinue
-   - After installing codeContinue, a setup wizard appears automatically (if you miss it, just open command pallete and search for "CodeContinue: Configure")
-   - Enter API end point and model name. Check [Configuration](https://github.com/kXborg/codeContinue/tree/main?tab=readme-ov-file#configuration) for details.
-
-Here as you can see below, I am just using LMStudio to run Qwen3-Coder-2.5B-Coder model locally. Get the server address and model name exactly from LMStudio and paste it in the setup wizard.
+1. Open the command palette via `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS).
+2. Type `Package Control: Install Package` and press Enter.
+3. Search for `CodeContinue` and press Enter to install.
+4. **Configure CodeContinue**:
+   - The setup wizard appears automatically on first run (or run `Ctrl+Shift+P` >> `CodeContinue: Configure`).
+   - Enter your endpoint URL (e.g. `http://localhost:1234` for LM Studio or `https://api.openai.com`).
+   - Select your model from the auto-detected list or enter it manually.
 
 ![codeContinue setup wizard](videos/v1-end-point.png)
 ![codeContinue setup wizard](videos/model-name.png)
 
-### Enable Key Binding
-The keybinding is not enabled by default to avoid possible conflicts with other packages. You can enable it by opening command pallette, type "prefernces : codeContinue Key Binding" and press Enter. It will show two panes, on left suggestion key binding and on right accept key binding. Copy paste the preffered key and save. That's it!
+### Enable Key Bindings
+Keybindings are not enabled by default to prevent conflicts with existing packages.
+
+To enable keybindings:
+1. Open the command palette (`Ctrl + Shift + P`).
+2. Type `Preferences: CodeContinue Key Bindings` and press Enter.
+3. Add your preferred keybinding to the User keymap (e.g. `Tab`, `Right Arrow`, or `Ctrl+Enter`):
+
+```json
+[
+    { "keys": ["tab"], "command": "code_continue_accept" }
+]
+```
 
 ![codeContinue key binding](videos/key-binding-1.png)
 
@@ -43,23 +48,23 @@ The keybinding is not enabled by default to avoid possible conflicts with other 
 
 ### Option 2: Manual Install (For Developers)
 ![Manual installation of codeContinue](videos/codeContinue-manual-install.gif)
-If you prefer manual setup, clone the repo and just use either of the CLI based method or GUI method.
 
 <details>
+<summary>Click to view manual installation options</summary>
 
 1. **Python CLI Installer**
 
 ```bash
-python install.py
+python tools/install.py
 ```
-Interactive command-line installer. Detects Sublime Text automatically, walks you through configuration.
+Interactive command-line installer with auto-detection, connectivity pre-flight check, and dynamic model discovery.
 
 2. **GUI Installer**
    
 ```bash
-python install_gui.py
+python tools/install_gui.py
 ```
-Graphical installer with Tkinter. Pre-loads existing settings, configurable interface.
+Cross-platform Tkinter graphical installer with automatic model detection and customizable configuration.
 
 </details>
 
@@ -67,61 +72,41 @@ Graphical installer with Tkinter. Pre-loads existing settings, configurable inte
 <details>
 <summary>Click to expand configuration options</summary>
 
-Settings are saved automatically. Reconfigure Anytime with  `Ctrl+Shift+P`. Following are configuration options.
+Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings`. Reconfigure anytime via `Ctrl+Shift+P` >> `CodeContinue: Configure`.
 
-- **endpoint**: Your OpenAI-compatible API endpoint (v1 format) - **Required**
-  - OpenAI: `https://api.openai.com/v1/chat/completions`
-  - Local server: `http://localhost:8000/v1/chat/completions`
-  - Other providers: Use their v1-compatible endpoint
+- **endpoint**: Your API endpoint URL - **Required**
+  - LM Studio: `http://localhost:1234`
+  - Ollama: `http://localhost:11434`
+  - OpenAI: `https://api.openai.com` (or `https://api.openai.com/v1/chat/completions`)
+  - Anthropic: `https://api.anthropic.com` (or `https://api.anthropic.com/v1/messages`)
 
-- **model**: The model to use for completions - **Required**
-  - Tested models so far are as follows: 
-    - `gpt-oss-20b`
-    - `Qwen/Qwen2.5-Coder-1.5B-Instruct`
+- **model**: The model name for completions - **Required**
+  - Examples: `qwen2.5-coder-3b-instruct`, `gpt-4o`, `claude-3-5-sonnet-20241022`
 
 - **api_key**: Authentication key (optional)
-  - Only needed if your endpoint requires it
-  - For OpenAI: `sk-...`
-  - Leave blank if not needed
+  - Required for cloud providers (e.g. `sk-...` for OpenAI, `sk-ant-...` for Anthropic).
+  - Leave blank for local endpoints that do not require auth.
 
-- **max_context_lines**: Number of lines of context to send (default: 30)
-  - Increase for more context, decrease for faster responses
+- **max_context_lines**: Number of surrounding code lines sent to the model (default: `30`).
 
-- **timeout_ms**: Request timeout in milliseconds (default: 30000)
-  - Increase if using slower endpoints
+- **timeout_ms**: Request timeout in milliseconds (default: `30000`).
 
-- **trigger_language**: Array of language scopes to enable the plugin
-  - Examples: `python`, `cpp`, `javascript`, `typescript`, `java`, `go`, `rust`, etc.
+- **trigger_language**: Array of language scopes to enable completion for (e.g. `["python", "cpp", "javascript", "typescript", "go", "rust"]`).
 
-- **debug**: Enable debug logging to console (default: `false`)
-  - Set to `true` to see detailed logs in `View >> Show Console`
-  - Plugin is silent by default
+- **system_prompt**: Custom system prompt for inline completions.
+  - Leave blank (`""`) to use the built-in default expert prompt.
+  - Set a custom prompt to tune smaller models or suppress docstrings/comments.
+
+- **debug**: Enable debug logging (default: `false`).
+  - Set to `true` to view detailed request/response logs in `View >> Show Console`.
 
 </details>
-
-### API Authentication
-
-For endpoints requiring authentication (like OpenAI):
-
-1. **Using the Configure command:**
-   - Press `Ctrl+Shift+P` >> "CodeContinue: Configure"
-   - When prompted for API Key, enter your key (e.g., `sk-...` for OpenAI)
-   - Settings are saved automatically
-
-2. **Or edit settings directly:**
-   - Open `Preferences > Package Settings > CodeContinue > Settings`
-   - Add your API key:
-   ```json
-   {
-       "api_key": "sk-your-api-key-here"
-   }
-   ```
 
 ## Requirements
 
 - Sublime Text 4
-- Internet connection (for API access)
-- Access to an OpenAI-compatible API endpoint
+- Python 3.8+ (bundled with Sublime Text 4)
+- Access to a local LLM runner (LM Studio, Ollama, vLLM) or a cloud API (OpenAI, Anthropic, etc.)
 
 ## Troubleshooting
 
@@ -129,69 +114,67 @@ For endpoints requiring authentication (like OpenAI):
 <summary>Click to expand troubleshooting tips</summary>
 
 ### Setup wizard not appearing
-- Restart Sublime Text: File -> Exit, then reopen
-- Check Sublime Text console (View -> Show Console) for errors
-- Manually run: `Preferences > Package Settings > CodeContinue > Settings`
-- Or use `Ctrl+Shift+P` >> "CodeContinue: Configure"
+- Restart Sublime Text: `File >> Exit`, then reopen.
+- Manually run: `Preferences >> Package Settings >> CodeContinue >> Settings` or `Ctrl+Shift+P` >> `CodeContinue: Configure`.
 
 ### Suggestions not appearing
-- Check that your language is in the `trigger_language` list
-- Verify your API endpoint is accessible and correct
-- Enable debug logging: set `"debug": true` in settings, then check `View >> Show Console`
-- Try `Ctrl+Shift+P` -> "CodeContinue: Configure" to verify settings
-- Make sure you have an active API key if required
+- Check that the current file's syntax matches an entry in `trigger_language`.
+- Verify your API endpoint is accessible.
+- Enable debug logging (`"debug": true`) and check `View >> Show Console`.
+- Make sure keybindings are configured in `Preferences: CodeContinue Key Bindings`.
 
 ### Timeout errors
-- Increase `timeout_ms` in settings (default: 20000ms)
-- Try a faster model or local endpoint
-- Check your internet connection
-- Verify your API key is valid
+- Increase `timeout_ms` in settings (e.g. `45000` for larger local models).
+- Check that your local LLM server is running and responding.
 
-### Authentication/Connection errors
-- Verify your API key is correct
-- Make sure endpoint URL is exactly right (copy-paste to avoid typos)
-- Check if the endpoint is currently running/available
-- Use `Ctrl+Shift+P` -> "CodeContinue: Configure" to update credentials
-
-### Keybindings not working
-- Make sure you've set up keybindings (they're not enabled by default)
-- Go to `Preferences > Package Settings > CodeContinue > Key Bindings`
-- Check for conflicts with other packages
-- Try alternative key combinations
+### Authentication or connection errors
+- Verify your API key is correct.
+- For local servers (LM Studio / Ollama), ensure the local server is started and listening on the configured port.
 
 </details>
 
-## Advanced Configuration
+## Advanced Configuration Examples
 
 <details>
-<summary>Click to expand advanced configuration examples</summary>
-CodeContinue works with any OpenAI-compatible v1 API. Examples:
+<summary>Click to expand provider configuration examples</summary>
+
+**Local LM Studio:**
+```json
+{
+    "endpoint": "http://localhost:1234/v1/chat/completions",
+    "model": "qwen2.5-coder-3b-instruct"
+}
+```
+
+**Local Ollama:**
+```json
+{
+    "endpoint": "http://localhost:11434/v1/chat/completions",
+    "model": "qwen2.5-coder:3b"
+}
+```
 
 **OpenAI:**
-```
-endpoint: https://api.openai.com/v1/chat/completions
-model: gpt-3.5-turbo or gpt-4
-api_key: sk-...
-```
-
-**Local LLM (LLaMA, Mistral, etc.):**
-```
-endpoint: http://localhost:8000/v1/chat/completions
-model: (whatever model you're running)
-api_key: (usually not needed)
+```json
+{
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "model": "gpt-4o",
+    "api_key": "sk-your-openai-key"
+}
 ```
 
-**Hugging Face Inference API:**
-```
-endpoint: https://api-inference.huggingface.co/v1/chat/completions
-model: HuggingFaceH4/zephyr-7b-beta
-api_key: hf_...
+**Anthropic:**
+```json
+{
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "model": "claude-3-5-sonnet-20241022",
+    "api_key": "sk-ant-your-anthropic-key"
+}
 ```
 
-**Other providers:**
-Any endpoint supporting OpenAI's v1 chat completion format will work.
 </details>
 
 ## License
 
 See [LICENSE](LICENSE) file for details.
+
