@@ -27,13 +27,58 @@
         }
     },
     {
+        "caption": "CodeContinue: Switch Model...",
+        "command": "code_continue_switch_model",
+        "description": "Switch active model for completions, chat, or editing"
+    },
+    {
         "caption": "CodeContinue: Chat about Selection",
         "command": "code_continue_chat",
         "description": "Chat with LLM about selected code"
     },
     {
+        "caption": "CodeContinue: Explain Selection",
+        "command": "code_continue_chat",
+        "args": {
+            "initial_message": "Explain this code in detail: break down the logic, edge cases, and any assumptions."
+        },
+        "description": "Explain logic and complexity of selected code"
+    },
+    {
+        "caption": "CodeContinue: Find Bugs & Vulnerabilities",
+        "command": "code_continue_chat",
+        "args": {
+            "initial_message": "Analyze this code for potential bugs, edge cases, performance bottlenecks, and security vulnerabilities. Suggest specific fixes."
+        },
+        "description": "Review selection for bugs, performance issues, and vulnerabilities"
+    },
+    {
+        "caption": "CodeContinue: Generate Unit Tests",
+        "command": "code_continue_chat",
+        "args": {
+            "initial_message": "Generate comprehensive unit tests for this code with thorough edge-case coverage."
+        },
+        "description": "Generate unit tests with edge-case coverage"
+    },
+    {
         "caption": "CodeContinue: Edit Selection",
         "command": "code_continue_edit",
         "description": "Rewrite selected code using an instruction"
+    },
+    {
+        "caption": "CodeContinue: Add Docstrings & Types",
+        "command": "code_continue_edit",
+        "args": {
+            "instruction": "Add clean docstrings and type annotations to this code without altering logic."
+        },
+        "description": "Add type hints and docstrings to selection"
+    },
+    {
+        "caption": "CodeContinue: Optimize & Clean Code",
+        "command": "code_continue_edit",
+        "args": {
+            "instruction": "Refactor and optimize this code for readability, performance, and best practices."
+        },
+        "description": "Refactor and optimize selection"
     }
 ]

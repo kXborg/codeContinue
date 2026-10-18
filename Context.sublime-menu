@@ -1,10 +1,54 @@
 [
+    { "caption": "-" },
     {
-        "caption": "CodeContinue: Chat about Selection",
-        "command": "code_continue_chat"
+        "caption": "CodeContinue",
+        "children": [
+            {
+                "caption": "Chat about Selection",
+                "command": "code_continue_chat"
+            },
+            {
+                "caption": "Explain Selection",
+                "command": "code_continue_chat",
+                "args": {
+                    "initial_message": "Explain this code in detail: break down the logic, edge cases, and any assumptions."
+                }
+            },
+            {
+                "caption": "Find Bugs & Vulnerabilities",
+                "command": "code_continue_chat",
+                "args": {
+                    "initial_message": "Analyze this code for potential bugs, edge cases, performance bottlenecks, and security vulnerabilities. Suggest specific fixes."
+                }
+            },
+            {
+                "caption": "Generate Unit Tests",
+                "command": "code_continue_chat",
+                "args": {
+                    "initial_message": "Generate comprehensive unit tests for this code with thorough edge-case coverage."
+                }
+            },
+            { "caption": "-" },
+            {
+                "caption": "Edit Selection...",
+                "command": "code_continue_edit"
+            },
+            {
+                "caption": "Add Docstrings & Types",
+                "command": "code_continue_edit",
+                "args": {
+                    "instruction": "Add clean docstrings and type annotations to this code without altering logic."
+                }
+            },
+            {
+                "caption": "Optimize & Clean Code",
+                "command": "code_continue_edit",
+                "args": {
+                    "instruction": "Refactor and optimize this code for readability, performance, and best practices."
+                }
+            }
+        ]
     },
-    {
-        "caption": "CodeContinue: Edit Selection",
-        "command": "code_continue_edit"
-    }
+    { "caption": "-" }
 ]
+
