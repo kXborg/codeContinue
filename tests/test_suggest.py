@@ -76,5 +76,56 @@ class TestIsSyntaxSupported(unittest.TestCase):
         self.assertFalse(is_syntax_supported(syntax, []))
 
 
+class FakeView:
+    def __init__(self, vid=1):
+        self._id = vid
+
+    def id(self):
+        return self._id
+
+
+from utils.suggest import CodeContinueListener, CodeContinueAcceptCommand, SuggestState, _states
+
+
+class TestQueryContextAndAccept(unittest.TestCase):
+    def setUp(self):
+        _states.clear()
+        self.listener = CodeContinueListener()
+        self.view = FakeView(vid=42)
+
+    def tearDown(self):
+        _states.clear()
+
+    def test_query_context_unhandled_key(self):
+        self.assertIsNone(self.listener.on_query_context(self.view, "some_other_key", 0, True, False))
+
+    def test_query_context_no_suggestion_visible(self):
+        # No phantom state exists
+        self.assertFalse(self.listener.on_query_context(self.view, "code_continue_visible", 0, True, False))
+
+    def test_query_context_suggestion_visible(self):
+        st = SuggestState()
+        st.phantom_set = object()  # dummy truthy
+        st.remaining_lines = ["print('hello')"]
+        _states[42] = st
+
+        self.assertTrue(self.listener.on_query_context(self.view, "code_continue_visible", 0, True, False))
+        self.assertFalse(self.listener.on_query_context(self.view, "code_continue_visible", 1, True, False))
+
+    def test_accept_command_is_enabled(self):
+        cmd = CodeContinueAcceptCommand()
+        cmd.view = self.view
+
+        self.assertFalse(cmd.is_enabled())
+
+        st = SuggestState()
+        st.phantom_set = object()
+        st.remaining_lines = ["line1"]
+        _states[42] = st
+
+        self.assertTrue(cmd.is_enabled())
+        self.assertTrue(cmd.is_visible())
+
+
 if __name__ == "__main__":
     unittest.main()

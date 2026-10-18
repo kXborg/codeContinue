@@ -17,8 +17,8 @@ import sublime_plugin
 
 from .api import get_provider
 from .log import _log, _log_error
-from .settings import is_endpoint_configured, show_endpoint_config_panel
-from .text_utils import clean_markdown_fences, strip_common_indent
+from .settings import is_endpoint_configured, show_endpoint_config_panel, get_feature_settings, update_status_bar
+from .text_utils import clean_markdown_fences, strip_common_indent, trim_suffix_overlap
 
 
 class SuggestState:
@@ -105,6 +105,9 @@ def is_syntax_supported(syntax, trigger_langs):
 
 
 class CodeContinueListener(sublime_plugin.EventListener):
+    def on_activated(self, view):
+        update_status_bar(view)
+
     def on_modified(self, view):
         # Clear any phantom suggestion when the user modifies text
         # (skip clearing if we're currently accepting a suggestion).
@@ -116,7 +119,20 @@ class CodeContinueListener(sublime_plugin.EventListener):
             if time.time() < state.accept_grace_until:
                 return
             clear_phantoms(view)
-        return
+
+    def on_query_context(self, view, key, operator, operand, match_all):
+        if key == "code_continue_visible":
+            vid = view.id()
+            state = _states.get(vid)
+            is_visible = bool(state and state.has_phantom and state.remaining_lines)
+            op_equal = getattr(sublime, "OP_EQUAL", 0)
+            op_not_equal = getattr(sublime, "OP_NOT_EQUAL", 1)
+            if operator == op_equal:
+                return is_visible == operand
+            elif operator == op_not_equal:
+                return is_visible != operand
+            return is_visible == bool(operand)
+        return None
 
     def on_text_command(self, view, command_name, args):
         """Trigger suggestion when the user inserts a newline (presses Enter)."""
@@ -148,7 +164,8 @@ class CodeContinueListener(sublime_plugin.EventListener):
 class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        settings = sublime.load_settings("CodeContinue.sublime-settings")
+        raw_settings = sublime.load_settings("CodeContinue.sublime-settings")
+        settings = get_feature_settings(raw_settings, "completion")
         endpoint = settings.get("endpoint", "")
         model = settings.get("model", "")
         max_lines = settings.get("max_context_lines", 40)
@@ -183,7 +200,17 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
 
         cursor_offset = cursor - start_point
         code_before = code[:cursor_offset]
-        prompt = "Continue the following code:\n{0}".format(code_before)
+        code_after = code[cursor_offset:]
+
+        if code_after.strip():
+            prompt = (
+                "Complete the code at the cursor position <CURSOR_HERE>.\n\n"
+                "Code before cursor:\n{0}\n"
+                "<CURSOR_HERE>\n"
+                "Code after cursor:\n{1}"
+            ).format(code_before, code_after)
+        else:
+            prompt = "Continue the following code:\n{0}".format(code_before)
 
         vid = view.id()
         state = _get_state(vid)
@@ -194,6 +221,7 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
 
         def fetch_completion():
             request_start_time = time.time()
+            sublime.set_timeout(lambda: update_status_bar(view, "Suggesting..."), 0)
             try:
                 if state.pending_request_id != request_id:
                     return
@@ -236,6 +264,8 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                     _log("Response received: {0:.2f}s (network), {1:.3f}s (parse), total {2:.2f}s".format(response_time, parse_time, total_time))
 
                     completion = clean_markdown_fences(completion)
+                    if code_after.strip():
+                        completion = trim_suffix_overlap(completion, code_after)
 
                     if state.pending_request_id == request_id and completion:
                         sublime.set_timeout(lambda: show_phantom(view, cursor, completion), 0)
@@ -263,6 +293,9 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 if state.pending_request_id == request_id:
                     msg = "CodeContinue: Unexpected error - {0}".format(str(e)[:50])
                     sublime.set_timeout(lambda: sublime.status_message(msg), 0)
+            finally:
+                if state.pending_request_id == request_id:
+                    sublime.set_timeout(lambda: update_status_bar(view), 0)
 
         threading.Thread(target=fetch_completion, daemon=True).start()
 
@@ -325,6 +358,14 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
             # Keep a short grace window to avoid immediate on_modified clearing
             state.accept_grace_until = time.time() + 0.2
             state.suppress_clear = False
+
+    def is_enabled(self):
+        vid = self.view.id()
+        state = _states.get(vid)
+        return bool(state and state.has_phantom and state.remaining_lines)
+
+    def is_visible(self):
+        return self.is_enabled()
 
 
 def show_phantom(view, cursor, suggestion):
