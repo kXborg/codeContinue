@@ -27,6 +27,33 @@ class OpenAIProvider:
     def parse_response(self, result_dict):
         return result_dict.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
 
+    def parse_stream_chunk(self, chunk_line):
+        """Parse an SSE line from an OpenAI-compatible stream.
+
+        Returns:
+            str: Text chunk (may be empty string)
+            None: End of stream
+        """
+        line = chunk_line.strip()
+        if not line or not line.startswith("data:"):
+            return ""
+        data_str = line[5:].strip()
+        if data_str == "[DONE]":
+            return None
+        try:
+            data = json.loads(data_str)
+            choices = data.get("choices", [])
+            if choices and len(choices) > 0:
+                delta = choices[0].get("delta", {})
+                content = delta.get("content", "")
+                finish_reason = choices[0].get("finish_reason")
+                if finish_reason is not None and not content:
+                    return None
+                return content or ""
+        except Exception:
+            pass
+        return ""
+
 
 class AnthropicProvider:
     def build_headers(self, settings):
@@ -63,6 +90,33 @@ class AnthropicProvider:
         content = result_dict.get("content", [])
         if content and len(content) > 0:
             return content[0].get("text", "").strip()
+        return ""
+
+    def parse_stream_chunk(self, chunk_line):
+        """Parse an SSE line from an Anthropic stream.
+
+        Returns:
+            str: Text chunk (may be empty string)
+            None: End of stream
+        """
+        line = chunk_line.strip()
+        if not line or not line.startswith("data:"):
+            return ""
+        data_str = line[5:].strip()
+        try:
+            data = json.loads(data_str)
+            event_type = data.get("type")
+            if event_type == "content_block_delta":
+                delta = data.get("delta", {})
+                return delta.get("text", "") or ""
+            elif event_type in ("message_stop", "message_delta"):
+                delta = data.get("delta", {})
+                if delta.get("stop_reason") is not None:
+                    return None
+                if event_type == "message_stop":
+                    return None
+        except Exception:
+            pass
         return ""
 
 

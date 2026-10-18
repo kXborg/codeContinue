@@ -147,6 +147,22 @@ class TestOpenAIProvider(unittest.TestCase):
         result = {"choices": [{"message": {"content": " hello  "}}]}
         self.assertEqual(self.provider.parse_response(result), "hello")
 
+    def test_parse_stream_chunk_content(self):
+        line = 'data: {"choices": [{"delta": {"content": "world"}}]}'
+        self.assertEqual(self.provider.parse_stream_chunk(line), "world")
+
+    def test_parse_stream_chunk_done(self):
+        line = "data: [DONE]"
+        self.assertIsNone(self.provider.parse_stream_chunk(line))
+
+    def test_parse_stream_chunk_finish_reason(self):
+        line = 'data: {"choices": [{"delta": {}, "finish_reason": "stop"}]}'
+        self.assertIsNone(self.provider.parse_stream_chunk(line))
+
+    def test_parse_stream_chunk_non_data(self):
+        self.assertEqual(self.provider.parse_stream_chunk(": keep-alive"), "")
+        self.assertEqual(self.provider.parse_stream_chunk(""), "")
+
 
 class TestAnthropicProvider(unittest.TestCase):
     def setUp(self):
@@ -175,6 +191,14 @@ class TestAnthropicProvider(unittest.TestCase):
     def test_parse_response(self):
         result = {"content": [{"text": " hello  "}]}
         self.assertEqual(self.provider.parse_response(result), "hello")
+
+    def test_parse_stream_chunk_content(self):
+        line = 'data: {"type": "content_block_delta", "delta": {"type": "text_delta", "text": "streaming text"}}'
+        self.assertEqual(self.provider.parse_stream_chunk(line), "streaming text")
+
+    def test_parse_stream_chunk_stop(self):
+        line = 'data: {"type": "message_stop"}'
+        self.assertIsNone(self.provider.parse_stream_chunk(line))
 
 
 if __name__ == "__main__":

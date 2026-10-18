@@ -10,6 +10,7 @@ import sublime_plugin
 
 from .api import get_provider
 from .log import _log
+from .settings import get_feature_settings
 from .text_utils import describe_code_selection
 
 
@@ -150,9 +151,11 @@ def _chat_do_api_call(chat_view, state):
         state.requesting = False
         return
 
-    data = state.provider.format_payload(state.model, state.history, 2048, 0.5)
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    stream_enabled = settings.get("stream", True)
+    data = state.provider.format_payload(state.model, state.history, 2048, 0.5, stream=stream_enabled)
 
-    _log("Chat: Sending request to {0}".format(state.endpoint))
+    _log("Chat: Sending request to {0} (stream={1})".format(state.endpoint, stream_enabled))
 
     def do_request():
         try:
@@ -162,7 +165,48 @@ def _chat_do_api_call(chat_view, state):
                 headers=state.headers,
             )
             with urllib.request.urlopen(req, timeout=state.timeout_s) as response:
-                result = json.loads(response.read().decode())
+                content_type = response.headers.get("Content-Type", "")
+                is_sse = "text/event-stream" in content_type or stream_enabled
+
+                if is_sse and hasattr(state.provider, "parse_stream_chunk"):
+                    started = False
+                    accumulated = []
+
+                    for raw_line in response:
+                        if cvid not in _states:
+                            return
+                        line = raw_line.decode("utf-8", errors="replace")
+                        chunk = state.provider.parse_stream_chunk(line)
+                        if chunk is None:
+                            break
+                        if chunk:
+                            if not started:
+                                started = True
+                                def on_first_token():
+                                    if cvid in _states:
+                                        _chat_remove_thinking(chat_view)
+                                        _chat_view_append(chat_view, "\n---\n\n### 🤖 CodeContinue\n\n")
+                                sublime.set_timeout(on_first_token, 0)
+
+                            accumulated.append(chunk)
+                            text_piece = chunk
+                            sublime.set_timeout(lambda t=text_piece: _chat_view_append(chat_view, t) if cvid in _states else None, 0)
+
+                    reply = "".join(accumulated).strip()
+                    if reply:
+                        state.history.append({"role": "assistant", "content": reply})
+                        def on_stream_done():
+                            if cvid in _states:
+                                _chat_view_append(chat_view, "\n")
+                                _chat_show_input_area(chat_view)
+                                state.requesting = False
+                        sublime.set_timeout(on_stream_done, 0)
+                        return
+                    # If stream was empty, fall through to non-streaming parse or show empty
+
+                # Non-streaming fallback
+                raw_body = response.read().decode("utf-8", errors="replace")
+                result = json.loads(raw_body)
                 reply = state.provider.parse_response(result)
 
                 if reply:
@@ -276,13 +320,14 @@ class ChatEventListener(sublime_plugin.EventListener):
 class CodeContinueChatCommand(sublime_plugin.TextCommand):
     """Open a split-window chat about selected code."""
 
-    def run(self, edit):
+    def run(self, edit, initial_message=None):
         view = self.view
         window = view.window()
         if not window:
             return
 
-        settings = sublime.load_settings("CodeContinue.sublime-settings")
+        raw_settings = sublime.load_settings("CodeContinue.sublime-settings")
+        settings = get_feature_settings(raw_settings, "chat")
 
         selected_text = ""
         for region in view.sel():
@@ -325,6 +370,7 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
         cvid = chat_view.id()
 
         endpoint = settings.get("endpoint", "")
+        model = settings.get("model", "")
         provider = get_provider(endpoint, settings)
         
         state = ChatState(
@@ -332,7 +378,7 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
                 {"role": "system", "content": CHAT_SYSTEM_PROMPT},
             ],
             endpoint=endpoint,
-            model=settings.get("model", ""),
+            model=model,
             timeout_s=settings.get("timeout_ms", 30000) / 1000.0,
             headers=provider.build_headers(settings),
             code=selected_text,
@@ -343,24 +389,51 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
         _states[cvid] = state
 
         description = describe_code_selection(selected_text, lang)
-        greeting = "Hi, I see you have selected {0}; how can I help?".format(description)
+        model_badge = "`{0}`".format(model) if model else "default"
 
-        header = (
-            "## CodeContinue Chat\n"
-            "**File:** `{0}` | **Language:** `{1}`\n\n"
-            "---\n\n"
-            "### Selected Code\n"
-            "```{1}\n"
-            "{2}\n"
-            "```\n\n"
-            "---\n\n"
-            "### 🤖 CodeContinue\n\n"
-            "{3}\n"
-        ).format(base_name, lang, selected_text, greeting)
+        if initial_message:
+            header = (
+                "## CodeContinue Chat\n"
+                "**File:** `{0}` | **Language:** `{1}` | **Model:** {2}\n\n"
+                "---\n\n"
+                "### Selected Code\n"
+                "```{1}\n"
+                "{3}\n"
+                "```\n\n"
+                "---\n\n"
+                "### 👤 You\n\n"
+                "{4}\n"
+            ).format(base_name, lang, model_badge, selected_text, initial_message)
+            chat_view.run_command("append", {"characters": header})
+            chat_view.set_read_only(True)
 
-        chat_view.run_command("append", {"characters": header})
-        chat_view.set_read_only(True)
-        _chat_show_input_area(chat_view)
+            content = (
+                "Here is the selected code from `{0}` ({1}):\n\n"
+                "```{1}\n{2}\n```\n\n"
+                "{3}"
+            ).format(state.file_name, state.lang, state.code, initial_message)
+            state.history.append({"role": "user", "content": content})
+            _chat_view_append(chat_view, "\n---\n\n⏳ *Thinking...*\n")
+            state.requesting = True
+            _chat_do_api_call(chat_view, state)
+        else:
+            greeting = "Hi, I see you have selected {0}; how can I help?".format(description)
+            header = (
+                "## CodeContinue Chat\n"
+                "**File:** `{0}` | **Language:** `{1}` | **Model:** {2}\n\n"
+                "---\n\n"
+                "### Selected Code\n"
+                "```{1}\n"
+                "{3}\n"
+                "```\n\n"
+                "---\n\n"
+                "### 🤖 CodeContinue\n\n"
+                "{4}\n"
+            ).format(base_name, lang, model_badge, selected_text, greeting)
+
+            chat_view.run_command("append", {"characters": header})
+            chat_view.set_read_only(True)
+            _chat_show_input_area(chat_view)
 
     def is_enabled(self):
         """Only enable when there is a non-empty selection."""
