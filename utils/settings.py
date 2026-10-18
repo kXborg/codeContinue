@@ -1,6 +1,7 @@
 """Settings discovery, first-run setup, and the Configure command."""
 
 import threading
+# pyrefly: ignore[missing-import]
 import sublime
 import sublime_plugin
 
@@ -8,9 +9,21 @@ from .api import normalize_endpoint, fetch_models, test_endpoint_connectivity
 from .log import _log
 
 
+DEFAULT_ENDPOINT = "http://localhost:8000/v1/chat/completions"
+
 # Module-level globals used across the first-run setup dialog callbacks.
 _setup_endpoint = None
 _setup_model = None
+
+
+def get_default_or_configured_endpoint(settings):
+    """Return configured endpoint or DEFAULT_ENDPOINT if empty/placeholder."""
+    if not settings:
+        return DEFAULT_ENDPOINT
+    endpoint = settings.get("endpoint", "").strip()
+    if not endpoint or "your-api" in endpoint.lower() or "trycloudflare.com" in endpoint.lower():
+        return DEFAULT_ENDPOINT
+    return endpoint
 
 
 def is_endpoint_configured(settings):
@@ -19,14 +32,76 @@ def is_endpoint_configured(settings):
     `settings` is duck-typed: anything exposing `.get(key, default)` works.
     """
     endpoint = settings.get("endpoint", "").strip()
-    if not endpoint or "your-api" in endpoint.lower():
+    if not endpoint or "your-api" in endpoint.lower() or "trycloudflare.com" in endpoint.lower():
         return False
     return True
+
+
+class FeatureSettings:
+    """Settings adapter providing feature-specific overrides with global fallbacks.
+
+    Example:
+        For feature_prefix="chat", calling cfg.get("model") will first check
+        "chat_model". If not set or empty, it falls back to "model".
+    """
+
+    def __init__(self, settings, feature_prefix=""):
+        self._settings = settings
+        self._prefix = feature_prefix.strip("_") if feature_prefix else ""
+
+    def get(self, key, default=None):
+        if not self._settings:
+            return default
+        if self._prefix:
+            specific_key = "{0}_{1}".format(self._prefix, key)
+            val = self._settings.get(specific_key)
+            if val is not None and val != "":
+                return val
+        return self._settings.get(key, default)
+
+
+def get_feature_settings(settings, feature_prefix=""):
+    """Return a FeatureSettings adapter for the given feature prefix."""
+    return FeatureSettings(settings, feature_prefix)
 
 
 def _save_settings():
     """Persist CodeContinue settings to disk."""
     sublime.save_settings("CodeContinue.sublime-settings")
+
+
+def update_status_bar(view, state_text=None):
+    """Update Sublime Text status bar with current CodeContinue model/state."""
+    if not view or not getattr(view, "is_valid", lambda: True)():
+        return
+    if getattr(view, "is_scratch", lambda: False)():
+        return
+
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    if not settings.get("status_bar", True):
+        if hasattr(view, "erase_status"):
+            view.erase_status("code_continue_status")
+        return
+
+    model = settings.get("model", "")
+    if not model:
+        status = "CodeContinue: [No Model]"
+    elif state_text:
+        status = "CodeContinue: [{0}] {1}".format(model, state_text)
+    else:
+        status = "CodeContinue: [{0}]".format(model)
+
+    if hasattr(view, "set_status"):
+        view.set_status("code_continue_status", status)
+
+
+def _refresh_all_status_bars():
+    """Refresh status bar across all views in all open windows."""
+    if not hasattr(sublime, "windows"):
+        return
+    for window in sublime.windows():
+        for view in window.views():
+            update_status_bar(view)
 
 
 def _prompt_for_model(window, settings, default_model, on_done, on_cancel):
@@ -95,7 +170,7 @@ def show_endpoint_config_panel(view):
         return
 
     settings = sublime.load_settings("CodeContinue.sublime-settings")
-    current_endpoint = settings.get("endpoint", "http://localhost:1234")
+    current_endpoint = get_default_or_configured_endpoint(settings)
 
     def on_endpoint_done(endpoint_text):
         norm_endpoint = normalize_endpoint(endpoint_text)
@@ -126,7 +201,7 @@ def show_endpoint_config_panel(view):
         _log("Configuration: endpoint panel cancelled")
 
     window.show_input_panel(
-        "CodeContinue - API Endpoint (e.g. http://localhost:1234):",
+        "CodeContinue - API Endpoint (e.g. {0}):".format(DEFAULT_ENDPOINT),
         current_endpoint,
         on_endpoint_done,
         None,
@@ -145,6 +220,11 @@ def plugin_loaded():
         _log("CodeContinue: First run detected, showing setup dialog")
         sublime.set_timeout(show_setup_dialog, 500)
 
+    if hasattr(settings, "add_on_change"):
+        settings.add_on_change("code_continue_status_bar", lambda: _refresh_all_status_bars())
+
+    sublime.set_timeout(_refresh_all_status_bars, 200)
+
 
 def show_setup_dialog():
     """First-run setup: prompt for endpoint, then model, then optional API key.
@@ -160,9 +240,12 @@ def show_setup_dialog():
     if not window:
         return
 
+    settings = sublime.load_settings("CodeContinue.sublime-settings")
+    current_endpoint = get_default_or_configured_endpoint(settings)
+
     window.show_input_panel(
-        "CodeContinue Setup: API Endpoint URL (e.g. http://localhost:1234 or full URL):",
-        "https://api.openai.com/v1/chat/completions",
+        "CodeContinue Setup: API Endpoint URL (e.g. {0} or full URL):".format(DEFAULT_ENDPOINT),
+        current_endpoint,
         on_endpoint_entered,
         None,
         _on_setup_cancel_endpoint,
@@ -301,7 +384,7 @@ class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
             return
 
         settings = sublime.load_settings("CodeContinue.sublime-settings")
-        current_endpoint = settings.get("endpoint", "http://localhost:1234")
+        current_endpoint = get_default_or_configured_endpoint(settings)
 
         def on_endpoint_done(endpoint_text):
             norm_endpoint = normalize_endpoint(endpoint_text)
@@ -368,10 +451,63 @@ class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
             _log("Configure: endpoint panel cancelled")
 
         window.show_input_panel(
-            "CodeContinue - API Endpoint URL (e.g. http://localhost:1234 or full URL):",
+            "CodeContinue - API Endpoint URL (e.g. {0} or full URL):".format(DEFAULT_ENDPOINT),
             current_endpoint,
             on_endpoint_done,
             None,
             on_endpoint_cancel,
         )
+
+
+class CodeContinueSwitchModelCommand(sublime_plugin.ApplicationCommand):
+    """Quickly switch active model from detected models or manual input."""
+
+    def run(self, feature=None):
+        window = sublime.active_window()
+        if not window:
+            return
+
+        raw_settings = sublime.load_settings("CodeContinue.sublime-settings")
+
+        if not feature:
+            global_model = raw_settings.get("model") or "Not set"
+            chat_model = raw_settings.get("chat_model") or "Inherits global ({0})".format(global_model)
+            edit_model = raw_settings.get("edit_model") or "Inherits global ({0})".format(global_model)
+
+            items = [
+                ["Global / Completion Model", "Current: {0}".format(global_model)],
+                ["Chat Model Override", "Current: {0}".format(chat_model)],
+                ["Edit Model Override", "Current: {0}".format(edit_model)],
+            ]
+
+            def on_feature_select(idx):
+                if idx == 0:
+                    self._switch_for_feature(window, raw_settings, "global")
+                elif idx == 1:
+                    self._switch_for_feature(window, raw_settings, "chat")
+                elif idx == 2:
+                    self._switch_for_feature(window, raw_settings, "edit")
+
+            window.show_quick_panel(items, on_feature_select)
+        else:
+            self._switch_for_feature(window, raw_settings, feature)
+
+    def _switch_for_feature(self, window, raw_settings, feature):
+        feature_cfg = get_feature_settings(raw_settings, "" if feature == "global" else feature)
+        current_model = feature_cfg.get("model", "")
+        target_key = "model" if feature == "global" else "{0}_model".format(feature)
+        feature_title = feature.capitalize() if feature != "global" else "Global"
+
+        def on_done(selected_model):
+            selected_model = (selected_model or "").strip()
+            if selected_model:
+                raw_settings.set(target_key, selected_model)
+                _save_settings()
+                sublime.status_message("CodeContinue: {0} model set to '{1}'".format(feature_title, selected_model))
+                _refresh_all_status_bars()
+
+        def on_cancel():
+            sublime.status_message("CodeContinue: Model switch cancelled.")
+
+        _prompt_for_model(window, feature_cfg, current_model, on_done, on_cancel)
 

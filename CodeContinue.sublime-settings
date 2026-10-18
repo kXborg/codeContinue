@@ -3,13 +3,23 @@
     // Examples:
     //   - OpenAI: "https://api.openai.com/v1/chat/completions"
     //   - Local: "http://localhost:8000/v1/chat/completions"
-    "endpoint": "",
+    "endpoint": "http://localhost:8000/v1/chat/completions",
 
     // Model name to use for completions
     "model": "",
 
     // API key for authentication (optional, only if endpoint requires it)
     "api_key": "",
+
+    // Optional Chat overrides (falls back to global endpoint/model if omitted):
+    // "chat_endpoint": "https://api.anthropic.com/v1/messages",
+    // "chat_model": "claude-3-5-sonnet-20241022",
+    // "chat_api_key": "sk-ant-...",
+
+    // Optional Edit/Refactor overrides (falls back to global endpoint/model if omitted):
+    // "edit_endpoint": "https://api.openai.com/v1/chat/completions",
+    // "edit_model": "gpt-4o",
+    // "edit_api_key": "sk-...",
 
     // Number of lines of context to send to the model
     "max_context_lines": 30,
@@ -19,6 +29,15 @@
 
     // Languages to enable suggestions for
     "trigger_language": ["python", "cpp", "javascript"],
+
+    // Stream responses in real-time in the Chat panel
+    "stream": true,
+
+    // Show model name and activity in the Sublime Text status bar
+    "status_bar": true,
+
+    // Confirm edits with interactive diff review before replacing selection
+    "confirm_edits": true,
 
     // Enable debug logging to console (View > Show Console)
     "debug": false,
