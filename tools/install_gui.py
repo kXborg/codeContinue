@@ -276,25 +276,53 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
             log_callback(f"ERROR: Failed to copy {dir_name}: {e}\n")
             return False
     
-    # Create custom keybinding file
-    keymap_content = '''[
-    // Accept code suggestion
-    {{
-        "keys": ["{keybinding}"],
-        "command": "code_continue_accept"
-    }}
-]
-'''.format(keybinding=keybinding)
-    
-    keymap_dst = os.path.join(package_dest, "Default.sublime-keymap")
-    try:
-        with open(keymap_dst, 'w') as f:
-            f.write(keymap_content)
-        log_callback(f"✓ Created keybinding: {keybinding}\n")
-    except Exception as e:
-        log_callback(f"ERROR: Failed to write keybinding: {e}\n")
-        return False
-    
+    # Save custom keybinding to User/ directory (not package directory)
+    if keybinding:
+        user_dir = os.path.join(os.path.dirname(package_dest), "User")
+        os.makedirs(user_dir, exist_ok=True)
+        os_type = get_os_type()
+        platform_map = {
+            "windows": "Default (Windows).sublime-keymap",
+            "macos": "Default (OSX).sublime-keymap",
+            "linux": "Default (Linux).sublime-keymap",
+        }
+        user_keymap_name = platform_map.get(os_type, "Default.sublime-keymap")
+        user_keymap_dst = os.path.join(user_dir, user_keymap_name)
+
+        new_binding = {
+            "keys": [keybinding],
+            "command": "code_continue_accept",
+        }
+        if keybinding == "tab":
+            new_binding["context"] = [
+                {"key": "code_continue_visible", "operator": "equal", "operand": True}
+            ]
+
+        existing_bindings = []
+        if os.path.exists(user_keymap_dst):
+            try:
+                import re
+                with open(user_keymap_dst, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    clean_content = re.sub(r"//.*", "", content)
+                    parsed = json.loads(clean_content)
+                    if isinstance(parsed, list):
+                        existing_bindings = [
+                            b for b in parsed
+                            if not (isinstance(b, dict) and b.get("command") == "code_continue_accept")
+                        ]
+            except Exception:
+                existing_bindings = []
+
+        existing_bindings.append(new_binding)
+        try:
+            with open(user_keymap_dst, "w", encoding="utf-8") as f:
+                json.dump(existing_bindings, f, indent=4)
+            log_callback(f"✓ Configured keybinding in User/{user_keymap_name}: {keybinding}\n")
+        except Exception as e:
+            log_callback(f"ERROR: Failed to write user keybinding: {e}\n")
+            return False
+
     return True
 
 
@@ -336,7 +364,7 @@ class InstallerGUI:
         settings_path = os.path.join(self.script_dir, "CodeContinue.sublime-settings")
         
         default_settings = {
-            "endpoint": "https://your-api.com/v1/chat/completions",
+            "endpoint": "http://localhost:8000/v1/chat/completions",
             "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
             "max_context_lines": 30,
             "timeout_ms": 20000,
@@ -471,7 +499,7 @@ class InstallerGUI:
         # Example endpoint label
         ttk.Label(
             config_frame,
-            text='Example: "http://localhost:1234" or "https://api.openai.com/v1/chat/completions"',
+            text='Example: "http://localhost:8000/v1/chat/completions" or "https://api.openai.com/v1/chat/completions"',
             font=self.small_font,
             foreground="#888"
         ).grid(row=1, column=1, sticky=tk.W, padx=(0, 8))
@@ -651,7 +679,10 @@ class InstallerGUI:
                 "max_context_lines": int(self.max_context_var.get()),
                 "timeout_ms": int(self.timeout_var.get()),
                 "trigger_language": languages,
-                "system_prompt": self.system_prompt_var.get().strip()
+                "system_prompt": self.system_prompt_var.get().strip(),
+                "stream": True,
+                "status_bar": True,
+                "confirm_edits": True,
             }
 
             if self.api_key_var.get():

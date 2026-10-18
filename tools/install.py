@@ -49,9 +49,9 @@ def configure_settings():
     print()
     
     # Get endpoint
-    raw_endpoint = input("API Endpoint URL (e.g., http://localhost:1234 or full URL): ").strip()
+    raw_endpoint = input("API Endpoint URL (e.g., http://localhost:8000/v1/chat/completions or full URL): ").strip()
     if not raw_endpoint:
-        endpoint = "http://localhost:1234/v1/chat/completions"
+        endpoint = "http://localhost:8000/v1/chat/completions"
         print(f"ℹ Using default endpoint: {endpoint}")
     else:
         endpoint = normalize_endpoint(raw_endpoint)
@@ -159,7 +159,10 @@ def configure_settings():
         "max_context_lines": max_context,
         "timeout_ms": timeout,
         "trigger_language": languages,
-        "system_prompt": system_prompt
+        "system_prompt": system_prompt,
+        "stream": True,
+        "status_bar": True,
+        "confirm_edits": True,
     }
 
     if api_key:
@@ -414,25 +417,52 @@ def install_package(sublime_path, packages_dir, script_dir, user_config=None, ke
             print(f"ERROR: Failed to copy {dir_name}: {e}")
             return False
     
-    # Create custom keybinding file
-    keymap_content = '''[
-    // Accept code suggestion
-    {{
-        "keys": ["{keybinding}"],
-        "command": "code_continue_accept"
-    }}
-]
-'''.format(keybinding=keybinding)
-    
-    keymap_dst = os.path.join(package_dest, "Default.sublime-keymap")
-    try:
-        with open(keymap_dst, 'w') as f:
-            f.write(keymap_content)
-        print(f"✓ Created keybinding: {keybinding}")
-    except Exception as e:
-        print(f"ERROR: Failed to write keybinding: {e}")
-        return False
-    
+    # Save custom keybinding to User/ directory (not package directory)
+    if keybinding:
+        user_dir = os.path.join(packages_dir, "User")
+        os.makedirs(user_dir, exist_ok=True)
+        os_type = get_os_type()
+        platform_map = {
+            "windows": "Default (Windows).sublime-keymap",
+            "macos": "Default (OSX).sublime-keymap",
+            "linux": "Default (Linux).sublime-keymap",
+        }
+        user_keymap_name = platform_map.get(os_type, "Default.sublime-keymap")
+        user_keymap_dst = os.path.join(user_dir, user_keymap_name)
+
+        new_binding = {
+            "keys": [keybinding],
+            "command": "code_continue_accept",
+        }
+        if keybinding == "tab":
+            new_binding["context"] = [
+                {"key": "code_continue_visible", "operator": "equal", "operand": True}
+            ]
+
+        existing_bindings = []
+        if os.path.exists(user_keymap_dst):
+            try:
+                with open(user_keymap_dst, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    clean_content = re.sub(r"//.*", "", content)
+                    parsed = json.loads(clean_content)
+                    if isinstance(parsed, list):
+                        existing_bindings = [
+                            b for b in parsed
+                            if not (isinstance(b, dict) and b.get("command") == "code_continue_accept")
+                        ]
+            except Exception:
+                existing_bindings = []
+
+        existing_bindings.append(new_binding)
+        try:
+            with open(user_keymap_dst, "w", encoding="utf-8") as f:
+                json.dump(existing_bindings, f, indent=4)
+            print(f"✓ Configured keybinding in User/{user_keymap_name}: {keybinding}")
+        except Exception as e:
+            print(f"ERROR: Failed to write user keybinding: {e}")
+            return False
+
     return True
 
 

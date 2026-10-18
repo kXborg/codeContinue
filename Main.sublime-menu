@@ -33,6 +33,10 @@
                             {
                                 "caption": "Configure Wizard...",
                                 "command": "code_continue_configure"
+                            },
+                            {
+                                "caption": "Switch Model...",
+                                "command": "code_continue_switch_model"
                             }
                         ]
                     }

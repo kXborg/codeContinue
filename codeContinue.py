@@ -16,6 +16,7 @@ Implementation lives in the submodules:
 
 from .utils.settings import (  # noqa: F401
     CodeContinueConfigureCommand,
+    CodeContinueSwitchModelCommand,
     plugin_loaded,
 )
 from .utils.suggest import (  # noqa: F401
