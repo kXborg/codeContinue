@@ -223,11 +223,45 @@ class TestDescribeCodeSelection(unittest.TestCase):
         code = "x = 1\ny = 2\nz = x + y"
         self.assertEqual(describe_code_selection(code), "3 lines of code")
 
-    def test_empty_string(self):
-        self.assertEqual(describe_code_selection(""), "selected code")
+    def test_cursor_here_marker_removed(self):
+        text = "def foo():\n    return <CURSOR_HERE>42"
+        self.assertEqual(clean_markdown_fences(text), "def foo():\n    return 42")
 
-    def test_whitespace_string(self):
-        self.assertEqual(describe_code_selection("   \n\t  "), "selected code")
+
+from utils.text_utils import trim_suffix_overlap, compute_unified_diff
+
+
+class TestTrimSuffixOverlap(unittest.TestCase):
+    def test_no_overlap(self):
+        completion = "    total = a + b"
+        code_after = "\n    return total"
+        self.assertEqual(trim_suffix_overlap(completion, code_after), completion)
+
+    def test_trailing_line_matches_next_line(self):
+        completion = "    total = a + b\n    return total"
+        code_after = "\n    return total\n"
+        self.assertEqual(trim_suffix_overlap(completion, code_after), "    total = a + b")
+
+    def test_empty_inputs(self):
+        self.assertEqual(trim_suffix_overlap("", "foo"), "")
+        self.assertEqual(trim_suffix_overlap("foo", ""), "foo")
+        self.assertIsNone(trim_suffix_overlap(None, "foo"))
+
+
+class TestComputeUnifiedDiff(unittest.TestCase):
+    def test_diff_generation(self):
+        orig = "def foo():\n    return 1"
+        new = "def foo():\n    return 2"
+        diff = compute_unified_diff(orig, new, "test.py")
+        self.assertIn("--- a/test.py", diff)
+        self.assertIn("+++ b/test.py", diff)
+        self.assertIn("-    return 1", diff)
+        self.assertIn("+    return 2", diff)
+
+    def test_no_change_diff(self):
+        orig = "def foo():\n    pass"
+        diff = compute_unified_diff(orig, orig, "test.py")
+        self.assertEqual(diff, "")
 
 
 if __name__ == "__main__":

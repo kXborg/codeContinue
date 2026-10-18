@@ -35,8 +35,44 @@ def clean_markdown_fences(text):
 
     text = re.sub(r'^\s*```[\w]*\s*\n?', '', text)
     text = re.sub(r'\n?\s*```\s*$', '', text)
+    text = text.replace("<CURSOR_HERE>", "")
     text = _SPECIAL_TOKEN_RE.sub('', text)
     return text.strip()
+
+
+def trim_suffix_overlap(completion, code_after):
+    """Trim any trailing portion of completion that duplicates the leading portion of code_after."""
+    if not completion or not code_after:
+        return completion
+    after_stripped = code_after.lstrip()
+    if not after_stripped:
+        return completion
+
+    after_first_line = after_stripped.splitlines()[0].strip()
+    if not after_first_line:
+        return completion
+
+    comp_lines = completion.splitlines()
+    if comp_lines and comp_lines[-1].strip() == after_first_line:
+        trimmed = "\n".join(comp_lines[:-1])
+        if trimmed.strip():
+            return trimmed
+
+    return completion
+
+
+def compute_unified_diff(orig_text, new_text, filename="code"):
+    """Generate a standard unified diff between original and proposed new code."""
+    import difflib
+    orig_lines = [ln + "\n" for ln in (orig_text or "").splitlines()]
+    new_lines = [ln + "\n" for ln in (new_text or "").splitlines()]
+    diff = difflib.unified_diff(
+        orig_lines,
+        new_lines,
+        fromfile="a/" + filename,
+        tofile="b/" + filename,
+    )
+    return "".join(diff)
 
 
 def strip_common_indent(lines):
