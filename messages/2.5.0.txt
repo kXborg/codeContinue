@@ -1,0 +1,40 @@
+CodeContinue v2.5.0
+===================
+
+Major Features & Enhancements:
+
+1. Real-Time Streaming Chat:
+   • Responses stream token-by-token directly into the split Markdown chat view using
+     Server-Sent Events (SSE). Works seamlessly with OpenAI and Anthropic models.
+
+2. Dual-Engine Architecture:
+   • Mix-and-match models: run a lightning-fast local model (e.g. Qwen 2.5 Coder 1.5B)
+     for inline completions while routing Chat and In-Place Editing to Claude 3.5 Sonnet
+     or GPT-4o. Configure chat_endpoint, chat_model, edit_endpoint, edit_model in settings.
+
+3. Fill-In-The-Middle (FIM) & Suffix-Aware Completions:
+   • The autocomplete engine now provides bidirectional prefix and suffix context with
+     automatic suffix deduplication, ensuring clean insertions within existing code.
+
+4. Interactive Diff & Review for "Edit Selection":
+   • Refactored code can now be previewed as a unified diff in a dedicated scratch tab
+     before accepting, preventing unwanted file modifications.
+
+5. 1-Click Context Menu & Command Presets:
+   • Right-click or press Ctrl+Shift+P to instantly:
+     - Explain Selection (breaks down logic, edge cases, complexity)
+     - Find Bugs & Vulnerabilities (identifies performance issues and bugs)
+     - Generate Unit Tests (produces comprehensive tests with edge cases)
+     - Add Docstrings & Types (annotates functions and classes inline)
+     - Optimize & Clean Code (refactors for readability and performance)
+
+6. Status Bar Widget & On-the-Fly Model Switcher:
+   • Live status bar indicator shows the currently active model and completion activity.
+   • Press Ctrl+Shift+P >> "CodeContinue: Switch Model..." to switch models on the fly.
+
+7. Clean Defaults & Split-View Keymap Workflow:
+   • Default endpoint set to standard http://localhost:8000/v1/chat/completions.
+   • Step-by-step keybinding split-view guide prevents key conflict issues.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

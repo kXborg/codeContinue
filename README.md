@@ -5,13 +5,20 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 
 ## Features
 
-- **Fast inline code completion**: Powered by your choice of local or cloud LLM.
-- **Inline Edit & Refactor**: Select code >> right-click >> **CodeContinue: Edit Selection** to rewrite code using natural language instructions.
-- **Chat about code**: Select code >> right-click >> **CodeContinue: Chat about Selection** to discuss code in an interactive split-view chat.
+- **Fast Inline Code Completion**: Fill-In-The-Middle (FIM) and suffix-aware bidirectional context slicing with automatic suffix deduplication for clean inline autocompletion.
+- **Real-Time Streaming Chat**: Select code >> right-click >> **CodeContinue: Chat about Selection** to discuss code in an interactive split-view Markdown panel with live token streaming (Server-Sent Events).
+- **Interactive In-Place Edit & Diff Review**: Select code >> right-click >> **CodeContinue: Edit Selection** to rewrite code using natural language instructions. Review proposed changes as a unified diff in a dedicated tab before applying.
+- **1-Click Quick Action Presets**: Instant right-click context menu and command palette presets:
+  - *Explain Selection* (detailed logic breakdown, edge cases, complexity)
+  - *Find Bugs & Vulnerabilities* (code review for bugs, bottlenecks, and security issues)
+  - *Generate Unit Tests* (comprehensive unit tests with edge-case coverage)
+  - *Add Docstrings & Types* (in-place type annotations and docstrings)
+  - *Optimize & Clean Code* (in-place refactoring for readability and performance)
+- **Dual-Engine Architecture**: Mix-and-match models — e.g. use a fast local model for instant inline completions and a powerful cloud model (Claude 3.5 Sonnet or GPT-4o) for chat and editing.
+- **Status Bar Widget & Quick Model Switcher**: Live status indicator in Sublime Text's status bar showing the active model and completion activity, plus `Ctrl+Shift+P` >> **CodeContinue: Switch Model...** to change models on the fly.
 - **Automatic Endpoint & Model Discovery**: Paste your server address (e.g. `http://localhost:1234` or `https://api.openai.com`); CodeContinue automatically normalizes the URL and detects available models from `/v1/models`.
-- **Flexible Keyboard Shortcuts**: `Enter` to suggest, `Tab` to accept (⚠️ Note: Keybindings are customizable and enabled via settings).
 - **Multi-Provider Support**: Works out-of-the-box with OpenAI, Anthropic, LM Studio, Ollama, vLLM, and local OpenAI-compatible servers.
-- **Context-aware**: Uses surrounding code context to produce accurate suggestions.
+- **Flexible Keyboard Shortcuts**: Customizable keybindings (e.g. `Enter` to suggest, `Tab` or `Ctrl+Enter` to accept).
 
 ## Installation
 
@@ -22,7 +29,7 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 3. Search for `CodeContinue` and press Enter to install.
 4. **Configure CodeContinue**:
    - The setup wizard appears automatically on first run (or run `Ctrl+Shift+P` >> `CodeContinue: Configure`).
-   - Enter your endpoint URL (e.g. `http://localhost:1234` for LM Studio or `https://api.openai.com`).
+   - Enter your endpoint URL (e.g. `http://localhost:8000/v1/chat/completions` or `https://api.openai.com`).
    - Select your model from the auto-detected list or enter it manually.
 
 ![codeContinue setup wizard](videos/v1-end-point.png)
@@ -32,13 +39,26 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 Keybindings are not enabled by default to prevent conflicts with existing packages.
 
 To enable keybindings:
-1. Open the command palette (`Ctrl + Shift + P`).
+1. Open the command palette (`Ctrl + Shift + P` on Windows/Linux or `Cmd + Shift + P` on macOS).
 2. Type `Preferences: CodeContinue Key Bindings` and press Enter.
-3. Add your preferred keybinding to the User keymap (e.g. `Tab`, `Right Arrow`, or `Ctrl+Enter`):
+3. This opens a split view. Copy the keybinding configuration from the **left side** (Default template) and paste it into the **right side** (User keymap file) inside the `[ ... ]` list, then save (`Ctrl + S` / `Cmd + S`):
 
 ```json
 [
-    { "keys": ["tab"], "command": "code_continue_accept" }
+    { "keys": ["ctrl+enter"], "command": "code_continue_accept" }
+]
+```
+
+Or if you prefer `Tab` (with context so it only activates when a suggestion is visible):
+```json
+[
+    {
+        "keys": ["tab"],
+        "command": "code_continue_accept",
+        "context": [
+            { "key": "code_continue_visible", "operator": "equal", "operand": true }
+        ]
+    }
 ]
 ```
 
@@ -72,20 +92,33 @@ Cross-platform Tkinter graphical installer with automatic model detection and cu
 <details>
 <summary>Click to expand configuration options</summary>
 
-Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings`. Reconfigure anytime via `Ctrl+Shift+P` >> `CodeContinue: Configure`.
+Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings`. Reconfigure anytime via `Ctrl+Shift+P` >> `CodeContinue: Configure` or switch models via `Ctrl+Shift+P` >> `CodeContinue: Switch Model...`.
 
-- **endpoint**: Your API endpoint URL - **Required**
-  - LM Studio: `http://localhost:1234`
-  - Ollama: `http://localhost:11434`
+- **endpoint**: Your API endpoint URL (default: `http://localhost:8000/v1/chat/completions`) - **Required**
+  - Local Server (Ollama / LM Studio / vLLM): `http://localhost:8000` (or `http://localhost:8000/v1/chat/completions`)
   - OpenAI: `https://api.openai.com` (or `https://api.openai.com/v1/chat/completions`)
   - Anthropic: `https://api.anthropic.com` (or `https://api.anthropic.com/v1/messages`)
 
 - **model**: The model name for completions - **Required**
-  - Examples: `qwen2.5-coder-3b-instruct`, `gpt-4o`, `claude-3-5-sonnet-20241022`
+  - Examples: `qwen2.5-coder:1.5b`, `gpt-4o`, `claude-3-5-sonnet-20241022`
 
 - **api_key**: Authentication key (optional)
   - Required for cloud providers (e.g. `sk-...` for OpenAI, `sk-ant-...` for Anthropic).
   - Leave blank for local endpoints that do not require auth.
+
+- **chat_endpoint** / **chat_model** / **chat_api_key**: Optional Dual-Engine overrides for Chat.
+  - Allows using a different model for chat (e.g. `claude-3-5-sonnet-20241022`) while keeping a fast local model for completions.
+  - If omitted, Chat inherits the global `endpoint`, `model`, and `api_key`.
+
+- **edit_endpoint** / **edit_model** / **edit_api_key**: Optional Dual-Engine overrides for Edit Selection.
+  - Allows using a different model for code refactoring (e.g. `gpt-4o`).
+  - If omitted, Edit inherits the global `endpoint`, `model`, and `api_key`.
+
+- **stream**: Stream chat responses in real-time using SSE (default: `true`).
+
+- **status_bar**: Show active model name and suggestion activity in Sublime Text status bar (default: `true`).
+
+- **confirm_edits**: Require confirmation and unified diff review before applying code edits (default: `true`).
 
 - **max_context_lines**: Number of surrounding code lines sent to the model (default: `30`).
 
@@ -101,6 +134,25 @@ Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings
   - Set to `true` to view detailed request/response logs in `View >> Show Console`.
 
 </details>
+
+## Available Commands
+
+Access these commands from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) or right-click context menu:
+
+| Command | Context Menu | Description |
+| :--- | :--- | :--- |
+| `CodeContinue: Suggest` | — | Trigger code completion at cursor |
+| `CodeContinue: Switch Model...` | — | Switch model on the fly (Global, Chat, or Edit) |
+| `CodeContinue: Configure` | — | Launch setup wizard to reconfigure endpoints and keys |
+| `CodeContinue: Chat about Selection` | ✓ | Open real-time streaming split chat for selected code |
+| `CodeContinue: Explain Selection` | ✓ | Preset: Break down logic, edge cases, and complexity in chat |
+| `CodeContinue: Find Bugs & Vulnerabilities` | ✓ | Preset: Analyze code for bugs, bottlenecks, and security issues |
+| `CodeContinue: Generate Unit Tests` | ✓ | Preset: Generate comprehensive unit tests with edge-case coverage |
+| `CodeContinue: Edit Selection` | ✓ | Prompt for instruction and rewrite selected code inline |
+| `CodeContinue: Add Docstrings & Types` | ✓ | Preset: Add clean docstrings and type annotations inline |
+| `CodeContinue: Optimize & Clean Code` | ✓ | Preset: Refactor code for readability, performance, and style |
+| `Preferences: CodeContinue Settings` | — | Open user and default settings in a split view |
+| `Preferences: CodeContinue Key Bindings` | — | Open keybinding configuration in a split view |
 
 ## Requirements
 
@@ -169,6 +221,26 @@ Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings
     "endpoint": "https://api.anthropic.com/v1/messages",
     "model": "claude-3-5-sonnet-20241022",
     "api_key": "sk-ant-your-anthropic-key"
+}
+```
+
+**Dual-Engine (Local Autocomplete + Cloud Chat & Edit):**
+Run a fast local model for low-latency autocompletions, and route complex chat discussions or code refactoring to Claude 3.5 Sonnet or GPT-4o:
+```json
+{
+    // Fast local engine for inline completions
+    "endpoint": "http://localhost:8000/v1/chat/completions",
+    "model": "qwen2.5-coder:1.5b",
+
+    // Cloud engine for chat about code
+    "chat_endpoint": "https://api.anthropic.com/v1/messages",
+    "chat_model": "claude-3-5-sonnet-20241022",
+    "chat_api_key": "sk-ant-your-anthropic-key",
+
+    // Cloud engine for in-place code editing / refactoring
+    "edit_endpoint": "https://api.openai.com/v1/chat/completions",
+    "edit_model": "gpt-4o",
+    "edit_api_key": "sk-your-openai-key"
 }
 ```
 
