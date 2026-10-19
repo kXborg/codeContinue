@@ -289,14 +289,32 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
         user_keymap_name = platform_map.get(os_type, "Default.sublime-keymap")
         user_keymap_dst = os.path.join(user_dir, user_keymap_name)
 
-        new_binding = {
-            "keys": [keybinding],
-            "command": "code_continue_accept",
-        }
-        if keybinding == "tab":
-            new_binding["context"] = [
-                {"key": "code_continue_visible", "operator": "equal", "operand": True}
-            ]
+        new_bindings = []
+        if keybinding == "ctrl+enter":
+            new_bindings.append({
+                "keys": ["ctrl+enter"],
+                "command": "code_continue_accept",
+                "context": [
+                    {"key": "code_continue_visible", "operator": "equal", "operand": True}
+                ]
+            })
+            new_bindings.append({
+                "keys": ["ctrl+enter"],
+                "command": "code_continue_suggest"
+            })
+        else:
+            accept_binding = {
+                "keys": [keybinding],
+                "command": "code_continue_accept",
+                "context": [
+                    {"key": "code_continue_visible", "operator": "equal", "operand": True}
+                ]
+            }
+            new_bindings.append(accept_binding)
+            new_bindings.append({
+                "keys": ["ctrl+enter"],
+                "command": "code_continue_suggest"
+            })
 
         existing_bindings = []
         if os.path.exists(user_keymap_dst):
@@ -309,16 +327,16 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
                     if isinstance(parsed, list):
                         existing_bindings = [
                             b for b in parsed
-                            if not (isinstance(b, dict) and b.get("command") == "code_continue_accept")
+                            if not (isinstance(b, dict) and b.get("command") in ("code_continue_accept", "code_continue_suggest"))
                         ]
             except Exception:
                 existing_bindings = []
 
-        existing_bindings.append(new_binding)
+        existing_bindings.extend(new_bindings)
         try:
             with open(user_keymap_dst, "w", encoding="utf-8") as f:
                 json.dump(existing_bindings, f, indent=4)
-            log_callback(f"✓ Configured keybinding in User/{user_keymap_name}: {keybinding}\n")
+            log_callback(f"✓ Configured keybindings in User/{user_keymap_name} (Suggest: ctrl+enter, Accept: {keybinding})\n")
         except Exception as e:
             log_callback(f"ERROR: Failed to write user keybinding: {e}\n")
             return False
@@ -680,6 +698,7 @@ class InstallerGUI:
                 "timeout_ms": int(self.timeout_var.get()),
                 "trigger_language": languages,
                 "system_prompt": self.system_prompt_var.get().strip(),
+                "auto_suggest_on_enter": False,
                 "stream": True,
                 "status_bar": True,
                 "confirm_edits": True,

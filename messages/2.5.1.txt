@@ -1,0 +1,29 @@
+CodeContinue v2.5.1
+===================
+
+Keybinding & Suggestion Control Improvements:
+
+1. Controlled Suggestion Triggering:
+   • Disabled hardcoded auto-suggest on Enter in the background event listener.
+   • Added "auto_suggest_on_enter": false setting (default: false). Enter now
+     functions strictly as a normal editor newline.
+   • Code suggestions are triggered on-demand via your shortcut (e.g. Ctrl+Enter)
+     or the Command Palette, giving you total control.
+
+2. New Dismiss Command:
+   • Added `code_continue_dismiss` command to dismiss active phantom suggestions
+     instantly using the Escape key.
+
+3. Updated Keybinding Templates:
+   • Updated Default.sublime-keymap with complete copy-pasteable examples for:
+     - Option 1: Ctrl+Enter to Suggest, Tab to Accept (Recommended)
+     - Option 2: Single key (Ctrl+Enter for BOTH Suggest and Accept)
+     - Option 3: Alt+/ to Suggest, Tab to Accept
+     - Dismiss suggestion with Escape
+
+4. Installer Updates:
+   • Both tools/install.py and tools/install_gui.py now configure both Suggest
+     and Accept keybindings cleanly in the User keymap without Enter conflicts.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

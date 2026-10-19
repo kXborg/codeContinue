@@ -84,7 +84,13 @@ class FakeView:
         return self._id
 
 
-from utils.suggest import CodeContinueListener, CodeContinueAcceptCommand, SuggestState, _states
+from utils.suggest import (
+    CodeContinueListener,
+    CodeContinueAcceptCommand,
+    CodeContinueDismissCommand,
+    SuggestState,
+    _states,
+)
 
 
 class TestQueryContextAndAccept(unittest.TestCase):
@@ -126,6 +132,25 @@ class TestQueryContextAndAccept(unittest.TestCase):
         self.assertTrue(cmd.is_enabled())
         self.assertTrue(cmd.is_visible())
 
+    def test_dismiss_command_is_enabled(self):
+        cmd = CodeContinueDismissCommand()
+        cmd.view = self.view
+
+        self.assertFalse(cmd.is_enabled())
+
+        st = SuggestState()
+        st.phantom_set = object()
+        _states[42] = st
+
+        self.assertTrue(cmd.is_enabled())
+        self.assertTrue(cmd.is_visible())
+
+    def test_on_text_command_ignored_when_auto_suggest_false(self):
+        # auto_suggest_on_enter is false by default in load_settings stub
+        res = self.listener.on_text_command(self.view, "insert", {"characters": "\n"})
+        self.assertIsNone(res)
+
 
 if __name__ == "__main__":
     unittest.main()
+

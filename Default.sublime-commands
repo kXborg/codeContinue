@@ -10,6 +10,11 @@
         "description": "Get a code suggestion from CodeContinue"
     },
     {
+        "caption": "CodeContinue: Dismiss Suggestion",
+        "command": "code_continue_dismiss",
+        "description": "Dismiss currently visible code suggestion"
+    },
+    {
         "caption": "Preferences: CodeContinue Settings",
         "command": "edit_settings",
         "args": {

@@ -1,34 +1,95 @@
 // CodeContinue - Key Bindings
 // 
-// DEFAULT KEYBINDING: Not implemented by default to prevent conflicts.
-// You have to set it up once.
+// DEFAULT KEYBINDINGS: Not enabled by default to prevent conflicts with other packages.
+// You configure your preferred shortcuts once in your User keymap.
+//
+// NOTE: By default, suggestions are NOT automatically triggered on Enter.
+// You trigger suggestions on-demand via shortcut (or Command Palette).
 // 
 // HOW TO SET UP (SPLIT VIEW):
 // 1. Go to: Preferences > Package Settings > CodeContinue > Key Bindings
 //    (or press Ctrl+Shift+P >> "Preferences: CodeContinue Key Bindings")
-// 2. COPY the desired keybinding setting from the LEFT pane (this file).
+// 2. COPY your preferred configuration from the LEFT pane (this file).
 // 3. PASTE it into the RIGHT pane (User keymap) inside the [ ... ] list.
 // 4. SAVE the User keymap file (Ctrl+S / Cmd+S).
 // 
-// Example configurations to copy to the right pane:
+// -----------------------------------------------------------------------------
+// RECOMMENDED CONFIGURATIONS (Copy to the right pane):
+// -----------------------------------------------------------------------------
 //
-// Option 1: Ctrl+Enter (Recommended, no conflicts)
-// { "keys": ["ctrl+enter"], "command": "code_continue_accept" }
+// === Option 1: Ctrl+Enter to Suggest, Tab to Accept (Recommended) ===
+// [
+//     // 1. Trigger code suggestion on-demand:
+//     {
+//         "keys": ["ctrl+enter"],
+//         "command": "code_continue_suggest"
+//     },
+//     // 2. Accept suggestion (only active when a suggestion is visible):
+//     {
+//         "keys": ["tab"],
+//         "command": "code_continue_accept",
+//         "context": [
+//             { "key": "code_continue_visible", "operator": "equal", "operand": true }
+//         ]
+//     },
+//     // 3. Dismiss suggestion:
+//     {
+//         "keys": ["escape"],
+//         "command": "code_continue_dismiss",
+//         "context": [
+//             { "key": "code_continue_visible", "operator": "equal", "operand": true }
+//         ]
+//     }
+// ]
 //
-// Option 2: Tab key (only triggers when suggestion phantom is visible)
-// {
-//     "keys": ["tab"],
-//     "command": "code_continue_accept",
-//     "context": [
-//         { "key": "code_continue_visible", "operator": "equal", "operand": true }
-//     ]
-// }
+// === Option 2: Single Key (Ctrl+Enter for BOTH Suggest AND Accept) ===
+// When a suggestion is visible, Ctrl+Enter accepts it.
+// When no suggestion is visible, Ctrl+Enter triggers a new suggestion.
+// [
+//     {
+//         "keys": ["ctrl+enter"],
+//         "command": "code_continue_accept",
+//         "context": [
+//             { "key": "code_continue_visible", "operator": "equal", "operand": true }
+//         ]
+//     },
+//     {
+//         "keys": ["ctrl+enter"],
+//         "command": "code_continue_suggest"
+//     }
+// ]
 //
-// Option 3: Right Arrow key
-// { "keys": ["right"], "command": "code_continue_accept" }
+// === Option 3: Alt+/ to Suggest, Tab to Accept ===
+// [
+//     {
+//         "keys": ["alt+/"],
+//         "command": "code_continue_suggest"
+//     },
+//     {
+//         "keys": ["tab"],
+//         "command": "code_continue_accept",
+//         "context": [
+//             { "key": "code_continue_visible", "operator": "equal", "operand": true }
+//         ]
+//     }
+// ]
 //
-// Option 4: End key
-// { "keys": ["end"], "command": "code_continue_accept" }
+// -----------------------------------------------------------------------------
+// INDIVIDUAL COMMANDS REFERENCE:
+// -----------------------------------------------------------------------------
+//
+// • Trigger Suggestion:
+//   { "keys": ["ctrl+enter"], "command": "code_continue_suggest" }
+//
+// • Accept Suggestion (with context check so key only activates when visible):
+//   { "keys": ["tab"], "command": "code_continue_accept", "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }] }
+//   { "keys": ["ctrl+enter"], "command": "code_continue_accept", "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }] }
+//   { "keys": ["right"], "command": "code_continue_accept", "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }] }
+//   { "keys": ["end"], "command": "code_continue_accept", "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }] }
+//
+// • Dismiss Suggestion:
+//   { "keys": ["escape"], "command": "code_continue_dismiss", "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }] }
 
 []
+
 

@@ -135,8 +135,11 @@ class CodeContinueListener(sublime_plugin.EventListener):
         return None
 
     def on_text_command(self, view, command_name, args):
-        """Trigger suggestion when the user inserts a newline (presses Enter)."""
+        """Trigger suggestion when the user inserts a newline (if auto_suggest_on_enter is enabled)."""
         settings = sublime.load_settings("CodeContinue.sublime-settings")
+        if not settings.get("auto_suggest_on_enter", False):
+            return
+
         trigger_langs = settings.get("trigger_language", [])
         if not is_syntax_supported(view.syntax(), trigger_langs):
             return
@@ -363,6 +366,21 @@ class CodeContinueAcceptCommand(sublime_plugin.TextCommand):
         vid = self.view.id()
         state = _states.get(vid)
         return bool(state and state.has_phantom and state.remaining_lines)
+
+    def is_visible(self):
+        return self.is_enabled()
+
+
+class CodeContinueDismissCommand(sublime_plugin.TextCommand):
+    """Dismiss any visible phantom suggestions."""
+
+    def run(self, edit):
+        clear_phantoms(self.view)
+
+    def is_enabled(self):
+        vid = self.view.id()
+        state = _states.get(vid)
+        return bool(state and state.has_phantom)
 
     def is_visible(self):
         return self.is_enabled()

@@ -45,20 +45,40 @@ To enable keybindings:
 
 ```json
 [
-    { "keys": ["ctrl+enter"], "command": "code_continue_accept" }
-]
-```
+    // 1. Suggest on-demand with Ctrl+Enter:
+    { "keys": ["ctrl+enter"], "command": "code_continue_suggest" },
 
-Or if you prefer `Tab` (with context so it only activates when a suggestion is visible):
-```json
-[
+    // 2. Accept suggestion with Tab (only triggers when a suggestion is visible):
     {
         "keys": ["tab"],
         "command": "code_continue_accept",
         "context": [
             { "key": "code_continue_visible", "operator": "equal", "operand": true }
         ]
+    },
+
+    // 3. Dismiss suggestion:
+    {
+        "keys": ["escape"],
+        "command": "code_continue_dismiss",
+        "context": [
+            { "key": "code_continue_visible", "operator": "equal", "operand": true }
+        ]
     }
+]
+```
+
+Or if you prefer a single unified key (`Ctrl+Enter` for both suggest and accept):
+```json
+[
+    {
+        "keys": ["ctrl+enter"],
+        "command": "code_continue_accept",
+        "context": [
+            { "key": "code_continue_visible", "operator": "equal", "operand": true }
+        ]
+    },
+    { "keys": ["ctrl+enter"], "command": "code_continue_suggest" }
 ]
 ```
 
@@ -126,6 +146,8 @@ Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings
 
 - **trigger_language**: Array of language scopes to enable completion for (e.g. `["python", "cpp", "javascript", "typescript", "go", "rust"]`).
 
+- **auto_suggest_on_enter**: Automatically trigger code suggestions on every Enter / newline press (default: `false`). When `false`, suggestions are only requested on-demand via your shortcut (e.g. `Ctrl+Enter`) or Command Palette.
+
 - **system_prompt**: Custom system prompt for inline completions.
   - Leave blank (`""`) to use the built-in default expert prompt.
   - Set a custom prompt to tune smaller models or suppress docstrings/comments.
@@ -142,6 +164,7 @@ Access these commands from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) 
 | Command | Context Menu | Description |
 | :--- | :--- | :--- |
 | `CodeContinue: Suggest` | — | Trigger code completion at cursor |
+| `CodeContinue: Dismiss Suggestion` | — | Dismiss currently visible code suggestion |
 | `CodeContinue: Switch Model...` | — | Switch model on the fly (Global, Chat, or Edit) |
 | `CodeContinue: Configure` | — | Launch setup wizard to reconfigure endpoints and keys |
 | `CodeContinue: Chat about Selection` | ✓ | Open real-time streaming split chat for selected code |

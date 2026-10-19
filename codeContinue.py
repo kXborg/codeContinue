@@ -21,6 +21,7 @@ from .utils.settings import (  # noqa: F401
 )
 from .utils.suggest import (  # noqa: F401
     CodeContinueAcceptCommand,
+    CodeContinueDismissCommand,
     CodeContinueListener,
     CodeContinueSuggestCommand,
 )

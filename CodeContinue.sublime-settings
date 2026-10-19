@@ -30,6 +30,11 @@
     // Languages to enable suggestions for
     "trigger_language": ["python", "cpp", "javascript"],
 
+    // Automatically trigger code suggestions on every Enter / newline press.
+    // Default is false: suggestions are only triggered on-demand via your keybinding
+    // (e.g. Ctrl+Enter) or the Command Palette, giving you total control.
+    "auto_suggest_on_enter": false,
+
     // Stream responses in real-time in the Chat panel
     "stream": true,
 

@@ -26,36 +26,43 @@ To set up your keybinding:
 1. Open the Key Bindings split view:
    Preferences > Package Settings > CodeContinue > Key Bindings
    (or Ctrl+Shift+P >> "Preferences: CodeContinue Key Bindings")
-2. Copy the keybinding settings from the LEFT side (default template).
-3. Paste them into the RIGHT side (your User keymap file) inside [ ... ].
+2. Copy your preferred keybinding block from the LEFT side (default template).
+3. Paste it into the RIGHT side (your User keymap file) inside [ ... ].
 4. Save the file (Ctrl+S on Windows/Linux, Cmd+S on macOS).
 
-Example configuration to paste on the right side:
+Option 1: Ctrl+Enter to Suggest, Tab to Accept (Recommended):
 [
-    {
-        "keys": ["ctrl+enter"],
-        "command": "code_continue_accept"
-    }
-]
-
-If you prefer using Tab:
-[
+    { "keys": ["ctrl+enter"], "command": "code_continue_suggest" },
     {
         "keys": ["tab"],
         "command": "code_continue_accept",
-        "context": [
-            { "key": "code_continue_visible", "operator": "equal", "operand": true }
-        ]
+        "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }]
+    },
+    {
+        "keys": ["escape"],
+        "command": "code_continue_dismiss",
+        "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }]
     }
+]
+
+Option 2: Single Key (Ctrl+Enter for BOTH Suggest AND Accept):
+[
+    {
+        "keys": ["ctrl+enter"],
+        "command": "code_continue_accept",
+        "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }]
+    },
+    { "keys": ["ctrl+enter"], "command": "code_continue_suggest" }
 ]
 
 
 QUICK START
 -----------
 1. Open a Python, C++, or JavaScript file
-2. Press Enter at the end of a line - suggestions auto-trigger!
-3. Press your configured accept key (e.g. Ctrl+Enter or Tab) to accept the suggestion (gray inline text)
+2. Press your suggest shortcut (e.g. Ctrl+Enter) to request a code completion
+3. Press your accept key (e.g. Tab or Ctrl+Enter) to accept the suggestion (gray inline text)
 4. For multi-line suggestions, press the accept key multiple times
+5. (Optional) Enable "auto_suggest_on_enter": true in settings if you want auto-suggestions on Enter
 
 
 ENDPOINTS & MODELS
