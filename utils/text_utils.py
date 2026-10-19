@@ -22,21 +22,45 @@ _SPECIAL_TOKEN_RE = re.compile(
 
 
 def clean_markdown_fences(text):
-    """Remove markdown code fence markers and model control tokens from LLM output.
+    """Remove markdown code fence markers, conversational commentary, and model control tokens from LLM output.
 
     Handles:
-    - Opening fence at start of string: ```python, ```
-    - Closing fence at end of string: ```
+    - Fenced code blocks (```python ... ```), extracting the code and discarding any
+      conversational prose before the opening fence or after the closing fence.
+    - Multiple fenced code blocks, extracting and joining the code blocks while discarding
+      interleaved conversational commentary.
+    - Opening fence without closing fence (truncated output).
+    - Closing fence followed by markdown commentary or at end of string.
     - Bracket tokens: [END_OF_TEXT], [INST], [/INST]
     - Angle-bar tokens: <|im_end|>, <|endoftext|>, Llama 3 markers, FIM markers, etc.
     """
     if not text:
         return text
 
-    text = re.sub(r'^\s*```[\w]*\s*\n?', '', text)
-    text = re.sub(r'\n?\s*```\s*$', '', text)
     text = text.replace("<CURSOR_HERE>", "")
-    text = _SPECIAL_TOKEN_RE.sub('', text)
+    text = _SPECIAL_TOKEN_RE.sub("", text)
+
+    # 1. Complete fenced code blocks: ```[optional_lang]\n<code>\n```
+    # Extracts code inside fences and discards any prose before opening or after closing fence.
+    pattern = re.compile(
+        r"^[ \t]*```[a-zA-Z0-9_+-]*[ \t]*\r?\n(.*?)\r?\n[ \t]*```[ \t]*$",
+        re.MULTILINE | re.DOTALL,
+    )
+    blocks = [m.strip() for m in pattern.findall(text) if m.strip()]
+    if blocks:
+        return "\n\n".join(blocks)
+
+    # 2. Opening fence without closing fence (e.g. truncated streaming or output)
+    text = re.sub(r"^\s*```[a-zA-Z0-9_+-]*[ \t]*\r?\n?", "", text)
+
+    # 3. Closing fence with optional trailing commentary or at end of string
+    # If a line consists solely of ```, anything from that line onwards is commentary/fences.
+    if re.search(r"^[ \t]*```[ \t]*$", text, re.MULTILINE):
+        parts = re.split(r"^[ \t]*```[ \t]*$", text, maxsplit=1, flags=re.MULTILINE)
+        if parts[0].strip():
+            text = parts[0]
+
+    text = re.sub(r"\s*```\s*$", "", text)
     return text.strip()
 
 

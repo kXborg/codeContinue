@@ -210,10 +210,14 @@ class CodeContinueSuggestCommand(sublime_plugin.TextCommand):
                 "Complete the code at the cursor position <CURSOR_HERE>.\n\n"
                 "Code before cursor:\n{0}\n"
                 "<CURSOR_HERE>\n"
-                "Code after cursor:\n{1}"
+                "Code after cursor:\n{1}\n\n"
+                "Output ONLY the code continuation for <CURSOR_HERE> without markdown code fences, backticks, or commentary."
             ).format(code_before, code_after)
         else:
-            prompt = "Continue the following code:\n{0}".format(code_before)
+            prompt = (
+                "Continue the following code:\n{0}\n\n"
+                "Output ONLY the code continuation without markdown code fences, backticks, or commentary."
+            ).format(code_before)
 
         vid = view.id()
         state = _get_state(vid)

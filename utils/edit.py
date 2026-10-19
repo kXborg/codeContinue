@@ -83,7 +83,9 @@ class CodeContinueEditCommand(sublime_plugin.TextCommand):
             def do_api_call():
                 prompt = (
                     "Rewrite the following code based on this instruction: {0}\n\n"
-                    "Code:\n{1}"
+                    "Code:\n{1}\n\n"
+                    "Output ONLY the replacement code. Do NOT wrap in markdown code fences or backticks. "
+                    "Do NOT include any explanations or commentary."
                 ).format(user_instruction, selected_text)
 
                 messages = [

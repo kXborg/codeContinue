@@ -98,12 +98,62 @@ class TestCleanMarkdownFences(unittest.TestCase):
 
     # --- Edge cases ---
 
-    def test_fence_in_middle_not_stripped(self):
-        """Only fences at the very start/end should be removed."""
-        text = "line1\n```\nline3"
-        result = clean_markdown_fences(text)
-        # The opening regex is anchored to ^ so mid-text ``` stays.
-        self.assertIn("```", result)
+    # --- Conversational text & prose stripping ---
+
+    def test_fenced_block_with_trailing_explanation(self):
+        """Conversational text after a closing fence must be stripped."""
+        text = (
+            "```python\n"
+            "def bubble_sort(arr: list[int]) -> list[int]:\n"
+            "    return arr\n"
+            "```\n\n"
+            "This code snippet demonstrates the implementation of the Bubble Sort algorithm in Python."
+        )
+        expected = "def bubble_sort(arr: list[int]) -> list[int]:\n    return arr"
+        self.assertEqual(clean_markdown_fences(text), expected)
+
+    def test_fenced_block_with_leading_and_trailing_text(self):
+        """Conversational greetings before and explanations after must be stripped."""
+        text = (
+            "Certainly! Here is the updated code:\n\n"
+            "```python\n"
+            "def add(a: int, b: int) -> int:\n"
+            "    return a + b\n"
+            "```\n\n"
+            "### Explanation:\n"
+            "1. Docstrings added.\n"
+        )
+        expected = "def add(a: int, b: int) -> int:\n    return a + b"
+        self.assertEqual(clean_markdown_fences(text), expected)
+
+    def test_multiple_fenced_blocks_extracts_all_code(self):
+        """Multiple code blocks should be joined and conversational chatter discarded."""
+        text = (
+            "First function:\n"
+            "```python\n"
+            "def foo():\n"
+            "    return 1\n"
+            "```\n"
+            "Second function:\n"
+            "```python\n"
+            "def bar():\n"
+            "    return 2\n"
+            "```\n"
+            "Hope that helps!"
+        )
+        expected = "def foo():\n    return 1\n\ndef bar():\n    return 2"
+        self.assertEqual(clean_markdown_fences(text), expected)
+
+    def test_unfenced_code_with_closing_fence_and_explanation(self):
+        """If code has no opening fence but ends in ``` and explanation, strip trailing text."""
+        text = (
+            "def bubble_sort(arr: list[int]) -> list[int]:\n"
+            "    return arr\n"
+            "```\n\n"
+            "This function sorts an array."
+        )
+        expected = "def bubble_sort(arr: list[int]) -> list[int]:\n    return arr"
+        self.assertEqual(clean_markdown_fences(text), expected)
 
     def test_preserves_html_angle_brackets(self):
         """Normal < > should not be stripped (only <|...|> control tokens)."""

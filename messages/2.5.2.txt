@@ -1,0 +1,18 @@
+CodeContinue v2.5.2
+===================
+
+Patch Release - Markdown Commentary & Fence Stripping:
+
+1. Clean Code Extraction:
+   • Fixed an issue where models (e.g. Qwen 2.5 Coder, Claude, GPT-4o) appending
+     conversational explanations (e.g. "This code snippet demonstrates...") after
+     closing markdown fences would leak the backticks and commentary into the editor.
+   • Upgraded clean_markdown_fences to cleanly isolate code blocks and strip all
+     leading greetings, trailing commentary, and markdown code fences.
+
+2. Negative Constraint Reinforcement:
+   • Reinforced prompt templates in Suggest and Edit to explicitly instruct
+     models to output raw code without backticks or conversational prose.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues
