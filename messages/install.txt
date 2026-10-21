@@ -1,83 +1,56 @@
-CodeContinue - AI Code Completion for Sublime Text
-=====================================================
+CodeContinue - AI Code Autocomplete & Chat for Sublime Text
+============================================================
 
-Welcome! CodeContinue is now installed and ready to use.
+🚀 FIRST THINGS FIRST: RUN THE SETUP WIZARD
+--------------------------------------------
+1. Press: Ctrl+Shift+P  (or Cmd+Shift+P on macOS)
+2. Type:  CodeContinue: Configure
+3. Press: Enter
 
-SETUP
------
-On your first use, you'll be prompted to configure:
-1. Your API endpoint (OpenAI-compatible or Anthropic)
-   Default: http://localhost:8000/v1/chat/completions
-2. Your model name (auto-detected or entered manually)
-3. Your API key (optional, for cloud providers)
-
-You can also configure anytime via Command Palette:
-  Ctrl+Shift+P >> "CodeContinue: Configure"
-
-Or manually:
-  Preferences >> Package Settings >> CodeContinue >> Settings
-
-
-DEFAULT KEYBINDING (not implemented, you have to set it up once)
----------------------------------------------------------------
-By default, no keybindings are enabled to prevent conflicts with your existing setup.
-
-To set up your keybinding:
-1. Open the Key Bindings split view:
-   Preferences > Package Settings > CodeContinue > Key Bindings
-   (or Ctrl+Shift+P >> "Preferences: CodeContinue Key Bindings")
-2. Copy your preferred keybinding block from the LEFT side (default template).
-3. Paste it into the RIGHT side (your User keymap file) inside [ ... ].
-4. Save the file (Ctrl+S on Windows/Linux, Cmd+S on macOS).
-
-Option 1: Ctrl+Enter to Suggest, Tab to Accept (Recommended):
-[
-    { "keys": ["ctrl+enter"], "command": "code_continue_suggest" },
-    {
-        "keys": ["tab"],
-        "command": "code_continue_accept",
-        "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }]
-    },
-    {
-        "keys": ["escape"],
-        "command": "code_continue_dismiss",
-        "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }]
-    }
-]
-
-Option 2: Single Key (Ctrl+Enter for BOTH Suggest AND Accept):
-[
-    {
-        "keys": ["ctrl+enter"],
-        "command": "code_continue_accept",
-        "context": [{ "key": "code_continue_visible", "operator": "equal", "operand": true }]
-    },
-    { "keys": ["ctrl+enter"], "command": "code_continue_suggest" }
-]
+The step-by-step setup wizard will configure everything in under 30 seconds:
+  1. Completion Endpoint & Model (auto-detects models from server)
+  2. Dual-Engine Chat Endpoint & Model (local runner or cloud like Claude/GPT)
+  3. 1-Click Keybinding Setup (Recommended: Ctrl+Enter Suggest, Tab Accept, Esc Dismiss)
 
 
 QUICK START
 -----------
-1. Open a Python, C++, or JavaScript file
-2. Press your suggest shortcut (e.g. Ctrl+Enter) to request a code completion
-3. Press your accept key (e.g. Tab or Ctrl+Enter) to accept the suggestion (gray inline text)
-4. For multi-line suggestions, press the accept key multiple times
-5. (Optional) Enable "auto_suggest_on_enter": true in settings if you want auto-suggestions on Enter
+1. Open any Python, C++, or JavaScript file
+2. Press Ctrl+Enter to trigger a code suggestion at cursor
+3. Press Tab to accept the inline suggestion (gray ghost text)
+4. Press Escape to dismiss a suggestion
+5. Right-click any code to Chat about Selection or Rewrite with Edit Selection
 
 
-ENDPOINTS & MODELS
-------------------
-Local Server (e.g., Ollama, LM Studio, vLLM):
-  Endpoint: http://localhost:8000/v1/chat/completions
-  Model: Your local model name
+KEYBINDINGS REFERENCE
+---------------------
+When you run "CodeContinue: Configure", the wizard installs the recommended
+shortcuts directly into your User keymap without conflicts:
 
-OpenAI:
-  Endpoint: https://api.openai.com/v1/chat/completions
+• Suggest on-demand:   Ctrl+Enter  (code_continue_suggest)
+• Accept suggestion:   Tab         (code_continue_accept, active only when visible)
+• Dismiss suggestion:  Escape      (code_continue_dismiss, active only when visible)
 
-Anthropic:
+To customize your keybindings manually at any time:
+  Preferences > Package Settings > CodeContinue > Key Bindings
+  (or Ctrl+Shift+P >> "Preferences: CodeContinue Key Bindings")
+
+
+ENDPOINTS & DUAL-ENGINE SETUP
+-----------------------------
+Local Server (LM Studio, Ollama, vLLM):
+  Endpoint: http://localhost:8000/v1/chat/completions (or your local IP:port)
+
+Anthropic (Claude 3.5 Sonnet / Haiku):
   Endpoint: https://api.anthropic.com/v1/messages
 
-For more details, see the README file.
+OpenAI (GPT-4o, etc.):
+  Endpoint: https://api.openai.com/v1/chat/completions
 
-Need help? Check the documentation at:
-https://github.com/kXborg/codeContinue
+You can also switch models on the fly anytime via:
+  Ctrl+Shift+P >> "CodeContinue: Switch Model..."
+
+
+Need help or have questions?
+Documentation: https://github.com/kXborg/codeContinue
+Issue tracker: https://github.com/kXborg/codeContinue/issues

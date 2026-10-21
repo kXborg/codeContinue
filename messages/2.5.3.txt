@@ -1,0 +1,26 @@
+CodeContinue v2.5.3
+===================
+
+Setup Wizard & First-Run Experience Overhaul:
+
+1. Dual-Engine Setup Wizard:
+   • The "CodeContinue: Configure" wizard now guides you through both the Code
+     Completion engine and the Dual-Engine Chat engine in one seamless flow.
+   • Automatically inherits completion endpoint/model for chat if no overrides
+     are needed, or lets you easily connect external cloud APIs (e.g. Claude,
+     DeepSeek, OpenAI).
+
+2. One-Click Keybinding Setup:
+   • The wizard now prompts to install recommended keybindings directly into
+     your User keymap with a single Enter press:
+     - Tab: Accept suggestion (active only when a suggestion is visible)
+     - Ctrl+Enter: Trigger suggestion on-demand
+     - Escape: Dismiss suggestion
+   • Safely merges with existing keybindings without duplicate or additive conflicts.
+
+3. Welcome Screen Priority:
+   • Updated install.txt to prominently display "FIRST THINGS FIRST" instructions
+     guiding users directly to Ctrl+Shift+P >> CodeContinue: Configure.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

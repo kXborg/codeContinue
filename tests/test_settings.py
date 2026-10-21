@@ -203,6 +203,84 @@ class TestUpdateStatusBar(unittest.TestCase):
         self.assertNotIn("code_continue_status", view.status)
 
 
+from utils.settings import (
+    get_keybinding_preset,
+    get_user_keymap_path,
+    install_user_keybindings,
+)
+import tempfile
+import json
+import shutil
+
+
+class TestKeybindingPresets(unittest.TestCase):
+    def test_recommended_preset(self):
+        preset = get_keybinding_preset("recommended")
+        self.assertEqual(len(preset), 3)
+        commands = [b["command"] for b in preset]
+        self.assertIn("code_continue_accept", commands)
+        self.assertIn("code_continue_suggest", commands)
+        self.assertIn("code_continue_dismiss", commands)
+
+        # Tab accept must have code_continue_visible context
+        tab_binding = next(b for b in preset if b["keys"] == ["tab"])
+        self.assertEqual(tab_binding["command"], "code_continue_accept")
+        self.assertTrue(any(c.get("key") == "code_continue_visible" for c in tab_binding["context"]))
+
+    def test_single_key_preset(self):
+        preset = get_keybinding_preset("single_key")
+        self.assertEqual(len(preset), 3)
+        ctrl_enter_bindings = [b for b in preset if b["keys"] == ["ctrl+enter"]]
+        self.assertEqual(len(ctrl_enter_bindings), 2)
+        # First has context, second is fallback suggest
+        self.assertEqual(ctrl_enter_bindings[0]["command"], "code_continue_accept")
+        self.assertEqual(ctrl_enter_bindings[1]["command"], "code_continue_suggest")
+
+
+class TestInstallUserKeybindings(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_dir, ignore_errors=True)
+
+    def test_creates_new_keymap_file(self):
+        ok, msg = install_user_keybindings(preset="recommended", packages_path=self.tmp_dir)
+        self.assertTrue(ok)
+        keymap_file = get_user_keymap_path(self.tmp_dir)
+        self.assertTrue(os.path.exists(keymap_file))
+
+        with open(keymap_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertEqual(len(data), 3)
+
+    def test_merges_and_cleans_old_bindings(self):
+        user_dir = os.path.join(self.tmp_dir, "User")
+        os.makedirs(user_dir, exist_ok=True)
+        keymap_file = get_user_keymap_path(self.tmp_dir)
+
+        initial = [
+            {"keys": ["ctrl+shift+x"], "command": "custom_user_command"},
+            {"keys": ["tab"], "command": "code_continue_accept"},
+            {"keys": ["alt+/"], "command": "code_continue_suggest"},
+        ]
+        with open(keymap_file, "w", encoding="utf-8") as f:
+            json.dump(initial, f)
+
+        ok, msg = install_user_keybindings(preset="recommended", packages_path=self.tmp_dir)
+        self.assertTrue(ok)
+
+        with open(keymap_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # custom_user_command must be preserved
+        self.assertTrue(any(b.get("command") == "custom_user_command" for b in data))
+        # Old alt+/ suggestion must be replaced
+        self.assertFalse(any(b.get("keys") == ["alt+/"] for b in data))
+        # Total: 1 custom + 3 recommended = 4
+        self.assertEqual(len(data), 4)
+
+
 if __name__ == "__main__":
     unittest.main()
 

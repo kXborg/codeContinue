@@ -316,6 +316,14 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
                 "command": "code_continue_suggest"
             })
 
+        new_bindings.append({
+            "keys": ["escape"],
+            "command": "code_continue_dismiss",
+            "context": [
+                {"key": "code_continue_visible", "operator": "equal", "operand": True}
+            ]
+        })
+
         existing_bindings = []
         if os.path.exists(user_keymap_dst):
             try:
@@ -327,7 +335,7 @@ def install_package(packages_dir, script_dir, user_config, keybinding, log_callb
                     if isinstance(parsed, list):
                         existing_bindings = [
                             b for b in parsed
-                            if not (isinstance(b, dict) and b.get("command") in ("code_continue_accept", "code_continue_suggest"))
+                            if not (isinstance(b, dict) and b.get("command") in ("code_continue_accept", "code_continue_suggest", "code_continue_dismiss"))
                         ]
             except Exception:
                 existing_bindings = []

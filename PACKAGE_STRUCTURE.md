@@ -18,7 +18,8 @@ codeContinue/
 │   ├── 2.4.0.txt                      # v2.4.0 release notes
 │   ├── 2.5.0.txt                      # v2.5.0 release notes
 │   ├── 2.5.1.txt                      # v2.5.1 release notes
-│   └── 2.5.2.txt                      # v2.5.2 release notes
+│   ├── 2.5.2.txt                      # v2.5.2 release notes
+│   └── 2.5.3.txt                      # v2.5.3 release notes
 ├── utils/
 │   ├── __init__.py                    # Submodule marker
 │   ├── api.py                         # OpenAI/Anthropic providers, SSE stream parser, model discovery

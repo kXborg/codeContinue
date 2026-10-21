@@ -28,20 +28,21 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 2. Type `Package Control: Install Package` and press Enter.
 3. Search for `CodeContinue` and press Enter to install.
 4. **Configure CodeContinue**:
-   - The setup wizard appears automatically on first run (or run `Ctrl+Shift+P` >> `CodeContinue: Configure`).
-   - Enter your endpoint URL (e.g. `http://localhost:8000/v1/chat/completions` or `https://api.openai.com`).
-   - Select your model from the auto-detected list or enter it manually.
+   - The setup wizard appears automatically on first run (or run `Ctrl+Shift+P` >> `CodeContinue: Configure` anytime).
+   - Follow the step-by-step prompts:
+     1. **Completion Engine**: Endpoint URL & model (auto-detects models from your server).
+     2. **Dual-Engine Chat**: Chat endpoint URL & model (press Enter to inherit completion endpoint or connect cloud APIs like Claude/OpenAI).
+     3. **1-Click Keybindings**: Installs the recommended shortcuts (`Ctrl+Enter` to suggest, `Tab` to accept, `Esc` to dismiss) directly into your User keymap without conflicts.
 
 ![codeContinue setup wizard](videos/v1-end-point.png)
 ![codeContinue setup wizard](videos/model-name.png)
 
-### Enable Key Bindings
-Keybindings are not enabled by default to prevent conflicts with existing packages.
+### Key Bindings
+The setup wizard (`CodeContinue: Configure`) installs the recommended keybindings automatically with one click. If you skipped this or wish to customize shortcuts manually:
 
-To enable keybindings:
 1. Open the command palette (`Ctrl + Shift + P` on Windows/Linux or `Cmd + Shift + P` on macOS).
 2. Type `Preferences: CodeContinue Key Bindings` and press Enter.
-3. This opens a split view. Copy the keybinding configuration from the **left side** (Default template) and paste it into the **right side** (User keymap file) inside the `[ ... ]` list, then save (`Ctrl + S` / `Cmd + S`):
+3. This opens a split view. Copy your preferred keybinding configuration from the **left side** (Default template) and paste it into the **right side** (User keymap file) inside the `[ ... ]` list, then save (`Ctrl + S` / `Cmd + S`):
 
 ```json
 [
