@@ -1,9 +1,11 @@
 # CodeContinue - AI Code Completion for Sublime Text
-![LLM Powered IntellyCode Plugin for Sublime Text](videos/codeContinue-in-action.gif)
+![LLM Powered IntellyCode Plugin for Sublime Text](assets/codeContinue-in-action.gif)
 
-An LLM-powered Sublime Text plugin that provides intelligent inline code completion suggestions, in-place code editing, and code chat using OpenAI-compatible or Anthropic APIs. Check out the [CodeContinue blog post here](https://www.orbital.net.in/blog/codecontinue-llm-powered-sublime-text-autocomplete).
+A simple code completion tool for Sublime Text. Check out following blog posts for details: [Introducing CodeContinue](https://www.orbital.net.in/blog/codecontinue-llm-powered-sublime-text-autocomplete) | [What's New in v2.5: Real-Time Chat Streaming, Dual-Engine & FIM](https://www.orbital.net.in/blog/codecontinue-v2-5-update).
 
 ## Features
+
+![codeContinue Features](assets/codecontinue-v2.5-poster.png)
 
 - **Fast Inline Code Completion**: Fill-In-The-Middle (FIM) and suffix-aware bidirectional context slicing with automatic suffix deduplication for clean inline autocompletion.
 - **Real-Time Streaming Chat**: Select code >> right-click >> **CodeContinue: Chat about Selection** to discuss code in an interactive split-view Markdown panel with live token streaming (Server-Sent Events).
@@ -22,20 +24,21 @@ An LLM-powered Sublime Text plugin that provides intelligent inline code complet
 
 ## Installation
 
-### Option 1: Install via Package Control (Recommended)
-
 1. Open the command palette via `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS).
 2. Type `Package Control: Install Package` and press Enter.
 3. Search for `CodeContinue` and press Enter to install.
-4. **Configure CodeContinue**:
+4. **Run the Setup Wizard**:
    - The setup wizard appears automatically on first run (or run `Ctrl+Shift+P` >> `CodeContinue: Configure` anytime).
    - Follow the step-by-step prompts:
      1. **Completion Engine**: Endpoint URL & model (auto-detects models from your server).
      2. **Dual-Engine Chat**: Chat endpoint URL & model (press Enter to inherit completion endpoint or connect cloud APIs like Claude/OpenAI).
      3. **1-Click Keybindings**: Installs the recommended shortcuts (`Ctrl+Enter` to suggest, `Tab` to accept, `Esc` to dismiss) directly into your User keymap without conflicts.
 
-![codeContinue setup wizard](videos/v1-end-point.png)
-![codeContinue setup wizard](videos/model-name.png)
+![codeContinue endpoint setup](assets/screenshots/v1-end-point.png)
+
+![codeContinue model discovery](assets/screenshots/configure-server-url-added-display-available-models.png)
+
+> **Manual Installation**: For developer builds or offline installation without Package Control, see the [Manual Installation & Developer Tools Guide](tools/README.md).
 
 ### Key Bindings
 The setup wizard (`CodeContinue: Configure`) installs the recommended keybindings automatically with one click. If you skipped this or wish to customize shortcuts manually:
@@ -83,31 +86,9 @@ Or if you prefer a single unified key (`Ctrl+Enter` for both suggest and accept)
 ]
 ```
 
-![codeContinue key binding](videos/key-binding-1.png)
+![codeContinue key binding](assets/screenshots/key-binding-1.png)
 
-![codeContinue key binding](videos/key-binding-2.png)
-
-### Option 2: Manual Install (For Developers)
-![Manual installation of codeContinue](videos/codeContinue-manual-install.gif)
-
-<details>
-<summary>Click to view manual installation options</summary>
-
-1. **Python CLI Installer**
-
-```bash
-python tools/install.py
-```
-Interactive command-line installer with auto-detection, connectivity pre-flight check, and dynamic model discovery.
-
-2. **GUI Installer**
-   
-```bash
-python tools/install_gui.py
-```
-Cross-platform Tkinter graphical installer with automatic model detection and customizable configuration.
-
-</details>
+![codeContinue key binding](assets/screenshots/key-binding-2.png)
 
 ## Configuration
 <details>
@@ -121,14 +102,14 @@ Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings
   - Anthropic: `https://api.anthropic.com` (or `https://api.anthropic.com/v1/messages`)
 
 - **model**: The model name for completions - **Required**
-  - Examples: `qwen2.5-coder:1.5b`, `gpt-4o`, `claude-3-5-sonnet-20241022`
+  - Examples: `qwen2.5-coder:1.5b`, `gpt-4o`, `claude-5-5-sonnet-20241022`
 
 - **api_key**: Authentication key (optional)
   - Required for cloud providers (e.g. `sk-...` for OpenAI, `sk-ant-...` for Anthropic).
   - Leave blank for local endpoints that do not require auth.
 
 - **chat_endpoint** / **chat_model** / **chat_api_key**: Optional Dual-Engine overrides for Chat.
-  - Allows using a different model for chat (e.g. `claude-3-5-sonnet-20241022`) while keeping a fast local model for completions.
+  - Allows using a different model for chat (e.g. `claude-5-5-sonnet-20241022`) while keeping a fast local model for completions.
   - If omitted, Chat inherits the global `endpoint`, `model`, and `api_key`.
 
 - **edit_endpoint** / **edit_model** / **edit_api_key**: Optional Dual-Engine overrides for Edit Selection.
@@ -160,6 +141,7 @@ Settings are saved automatically in `Packages/User/CodeContinue.sublime-settings
 
 ## Available Commands
 
+<details>
 Access these commands from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) or right-click context menu:
 
 | Command | Context Menu | Description |
@@ -177,6 +159,12 @@ Access these commands from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) 
 | `CodeContinue: Optimize & Clean Code` | ✓ | Preset: Refactor code for readability, performance, and style |
 | `Preferences: CodeContinue Settings` | — | Open user and default settings in a split view |
 | `Preferences: CodeContinue Key Bindings` | — | Open keybinding configuration in a split view |
+
+![codeContinue command palette](assets/screenshots/cmd-pallette.png)
+
+![codeContinue quick model switcher](assets/screenshots/choose-model.png)
+
+</details>
 
 ## Requirements
 
@@ -243,7 +231,7 @@ Access these commands from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) 
 ```json
 {
     "endpoint": "https://api.anthropic.com/v1/messages",
-    "model": "claude-3-5-sonnet-20241022",
+    "model": "claude-5-5-sonnet-20241022",
     "api_key": "sk-ant-your-anthropic-key"
 }
 ```
@@ -258,7 +246,7 @@ Run a fast local model for low-latency autocompletions, and route complex chat d
 
     // Cloud engine for chat about code
     "chat_endpoint": "https://api.anthropic.com/v1/messages",
-    "chat_model": "claude-3-5-sonnet-20241022",
+    "chat_model": "claude-5-5-sonnet-20241022",
     "chat_api_key": "sk-ant-your-anthropic-key",
 
     // Cloud engine for in-place code editing / refactoring
