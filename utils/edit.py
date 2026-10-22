@@ -187,6 +187,10 @@ class CodeContinueEditCommand(sublime_plugin.TextCommand):
         else:
             window.show_input_panel("Instruction:", "", execute_edit, None, lambda: view.erase_regions("code_continue_edit_target"))
 
+    def is_visible(self):
+        """Always show CodeContinue commands in the context menu."""
+        return True
+
     def is_enabled(self):
         for region in self.view.sel():
             if not region.empty():

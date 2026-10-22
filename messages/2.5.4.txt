@@ -1,0 +1,37 @@
+CodeContinue v2.5.4
+===================
+
+🚀 FIRST THINGS FIRST: RUN THE SETUP WIZARD
+--------------------------------------------
+1. Press: Ctrl+Shift+P  (or Cmd+Shift+P on macOS)
+2. Type:  CodeContinue: Configure
+3. Press: Enter
+
+The step-by-step setup wizard will configure everything in under 30 seconds:
+  1. Completion Endpoint & Model (auto-detects models from server)
+  2. Dual-Engine Chat Endpoint & Model (local runner or cloud like Claude/GPT)
+  3. 1-Click Keybinding Setup (Recommended: Ctrl+Enter Suggest, Tab Accept, Esc Dismiss)
+
+
+Patch Release v2.5.4 - macOS Compatibility & Menu Visibility:
+
+1. Right-Click Context Menu Visibility:
+   • Added is_visible() hooks to CodeContinueChatCommand and CodeContinueEditCommand.
+   • Ensures the CodeContinue submenu and quick presets (Explain Selection,
+     Find Bugs, Generate Tests, Docstrings, Optimize) always remain visible in
+     the editor context menu, preventing macOS from hiding the menu when text
+     is unselected.
+
+2. Configure Wizard Universal Availability:
+   • Upgraded CodeContinueConfigureCommand from TextCommand to WindowCommand.
+   • Allows "CodeContinue: Configure" to be launched seamlessly from the Command
+     Palette, top application menus (Preferences > Package Settings > CodeContinue),
+     or without an active text buffer open.
+   • Added resilient active window retry logic on macOS startup.
+
+3. Package Control Manual Install Conflict Documentation:
+   • Added troubleshooting guidance for removing loose manual install directories
+     (Packages/CodeContinue) that block Package Control's automatic updates.
+
+Questions or issues?
+https://github.com/kXborg/codeContinue/issues

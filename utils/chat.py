@@ -435,6 +435,10 @@ class CodeContinueChatCommand(sublime_plugin.TextCommand):
             chat_view.set_read_only(True)
             _chat_show_input_area(chat_view)
 
+    def is_visible(self):
+        """Always show CodeContinue commands in the context menu."""
+        return True
+
     def is_enabled(self):
         """Only enable when there is a non-empty selection."""
         for region in self.view.sel():

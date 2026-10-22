@@ -13,13 +13,17 @@ codeContinue/
 ├── Default.sublime-keymap             # Default keybindings template (empty by default)
 ├── Main.sublime-menu                  # Preferences > Package Settings menu
 ├── messages.json                      # Package Control post-install & upgrade messaging map
+├── docs/
+│   ├── CONFIGURATION.md               # Detailed configuration guide & provider recipes
+│   └── TROUBLESHOOTING.md             # Common issues, debugging, and manual install fixes
 ├── messages/
 │   ├── install.txt                    # Installation welcome guide & keybinding setup
 │   ├── 2.4.0.txt                      # v2.4.0 release notes
 │   ├── 2.5.0.txt                      # v2.5.0 release notes
 │   ├── 2.5.1.txt                      # v2.5.1 release notes
 │   ├── 2.5.2.txt                      # v2.5.2 release notes
-│   └── 2.5.3.txt                      # v2.5.3 release notes
+│   ├── 2.5.3.txt                      # v2.5.3 release notes
+│   └── 2.5.4.txt                      # v2.5.4 release notes
 ├── utils/
 │   ├── __init__.py                    # Submodule marker
 │   ├── api.py                         # OpenAI/Anthropic providers, SSE stream parser, model discovery

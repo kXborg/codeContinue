@@ -546,7 +546,16 @@ def run_configuration_wizard(window=None, on_complete=None):
 
 def show_setup_dialog():
     """First-run setup: launch the configuration wizard."""
-    run_configuration_wizard()
+    window = sublime.active_window()
+    if not window and hasattr(sublime, "windows"):
+        windows = sublime.windows()
+        if windows:
+            window = windows[0]
+    if window:
+        run_configuration_wizard(window)
+    else:
+        # Retry shortly if Sublime window is still initializing on startup (common on macOS)
+        sublime.set_timeout(show_setup_dialog, 1000)
 
 
 def show_endpoint_config_panel(view):
@@ -555,10 +564,10 @@ def show_endpoint_config_panel(view):
     run_configuration_wizard(window)
 
 
-class CodeContinueConfigureCommand(sublime_plugin.TextCommand):
-    """Reconfigure CodeContinue via Command Palette."""
-    def run(self, edit):
-        window = self.view.window() or sublime.active_window()
+class CodeContinueConfigureCommand(sublime_plugin.WindowCommand):
+    """Reconfigure CodeContinue via Command Palette or Menu."""
+    def run(self):
+        window = self.window or sublime.active_window()
         run_configuration_wizard(window)
 
 

@@ -1,6 +1,18 @@
 CodeContinue v2.2.0
 ===================
 
+🚀 FIRST THINGS FIRST: RUN THE SETUP WIZARD
+--------------------------------------------
+1. Press: Ctrl+Shift+P  (or Cmd+Shift+P on macOS)
+2. Type:  CodeContinue: Configure
+3. Press: Enter
+
+The step-by-step setup wizard will configure everything in under 30 seconds:
+  1. Completion Endpoint & Model (auto-detects models from server)
+  2. Dual-Engine Chat Endpoint & Model (local runner or cloud like Claude/GPT)
+  3. 1-Click Keybinding Setup (Recommended: Ctrl+Enter Suggest, Tab Accept, Esc Dismiss)
+
+
 New Features:
 • Inline edit / refactor (Ctrl+K style): Select code, right-click, and choose "CodeContinue: Edit Selection" to instantly rewrite your code based on an instruction.
 • Anthropic / Messages API support: You can now use Anthropic's Claude models seamlessly by configuring an Anthropic endpoint and API key.
